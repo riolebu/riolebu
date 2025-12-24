@@ -1,6 +1,7 @@
-/* Admin JS Logic */
+import { db, storage } from './firebase-config.js';
+import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+import { ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
 
-// Admin Password (Simulated for this demo)
 const ADMIN_PASS = "admin123";
 
 const defaultProducts = [
@@ -14,78 +15,6 @@ const defaultProducts = [
         stock: 3
     },
     {
-        id: 2,
-        name: "Motor Diésel Estacionario V8",
-        category: "motores",
-        price: 4500000,
-        oldPrice: 5200000,
-        image: "assets/images/products/motor_diesel.jpg",
-        stock: 5
-    },
-    {
-        id: 3,
-        name: "Generador Eléctrico Trifásico",
-        category: "generadores",
-        price: 2890000,
-        oldPrice: null,
-        image: "assets/images/products/generador.jpg",
-        stock: 10
-    },
-    {
-        id: 4,
-        name: "Compresor de Tornillo 10HP",
-        category: "maquinaria",
-        price: 3590000,
-        oldPrice: 3990000,
-        image: "assets/images/products/compresor.jpg",
-        stock: 4
-    },
-    {
-        id: 5,
-        name: "Plancha Compactadora Industrial",
-        category: "maquinaria",
-        price: 890000,
-        oldPrice: 1100000,
-        image: "assets/images/products/compactadora.jpg",
-        stock: 8
-    },
-    {
-        id: 6,
-        name: "Motor Fuera de Borda 25HP",
-        category: "motores",
-        price: 2450000,
-        oldPrice: null,
-        image: "assets/images/products/fuera_borda.jpg",
-        stock: 6
-    },
-    {
-        id: 7,
-        name: "Rotomartillo Industrial HD",
-        category: "herramientas",
-        price: 189900,
-        oldPrice: 220000,
-        image: "assets/images/products/rotomartillo.jpg",
-        stock: 15
-    },
-    {
-        id: 8,
-        name: "Soldadora MIG/MAG Pro",
-        category: "herramientas",
-        price: 125000,
-        oldPrice: 159000,
-        image: "assets/images/products/soldadora.jpg",
-        stock: 20
-    },
-    {
-        id: 9,
-        name: "Nivel Láser Autonivelante 3D",
-        category: "herramientas",
-        price: 89900,
-        oldPrice: null,
-        image: "assets/images/products/nivel_laser.jpg",
-        stock: 12
-    },
-    {
         id: 10,
         name: "Equipamiento Seguridad Completo",
         category: "seguridad",
@@ -97,12 +26,34 @@ const defaultProducts = [
 ];
 
 // State
-let products = JSON.parse(localStorage.getItem('mariomari_products_v4')) || defaultProducts;
+let products = [];
 let cart = []; // Local cart for POS
-let movementsHistory = JSON.parse(localStorage.getItem('mariomari_movements_v4')) || [];
+let movementsHistory = [];
 let adminUsers = JSON.parse(localStorage.getItem('mariomari_admin_users')) || [
     { name: 'Administrador Master', email: 'admin@mariomari.cl', password: 'admin', role: 'admin', status: 'active' }
 ];
+
+// Firestore Listeners
+const productsRef = collection(db, 'products');
+onSnapshot(productsRef, (snapshot) => {
+    products = snapshot.docs.map(doc => ({
+        docId: doc.id,
+        ...doc.data()
+    }));
+    if (itemActiveTab === 'inventory') renderInventory();
+});
+
+const movementsRef = collection(db, 'movements');
+const movementsQuery = query(movementsRef, orderBy('id', 'desc'));
+onSnapshot(movementsQuery, (snapshot) => {
+    movementsHistory = snapshot.docs.map(doc => ({
+        docId: doc.id,
+        ...doc.data()
+    }));
+    if (itemActiveTab === 'movements') renderMovementsHistory();
+});
+
+let itemActiveTab = 'pos';
 
 // DOM Elements
 const loginModal = document.getElementById('login-modal');
@@ -203,6 +154,8 @@ navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         if (!item.dataset.tab) return;
         e.preventDefault();
+
+        itemActiveTab = item.dataset.tab;
 
         // UI
         navItems.forEach(n => n.classList.remove('active'));
@@ -375,14 +328,18 @@ posCheckoutBtn.addEventListener('click', () => {
         }
     }
 
-    // Deduct stock
-    cart.forEach(item => {
+    // Deduct stock in Firestore
+    cart.forEach(async item => {
         const product = products.find(p => p.id === item.id);
-        if (product) product.stock -= item.qty;
+        if (product && product.docId) {
+            const prodRef = doc(db, 'products', product.docId);
+            await updateDoc(prodRef, {
+                stock: product.stock - item.qty
+            });
+        }
     });
 
-    // Save to LocalStorage
-    localStorage.setItem('mariomari_products_v4', JSON.stringify(products));
+    // Local Storage fallback removed
 
     // Simulate SII API Service Call
     console.log("Enviando datos al SII...");
@@ -491,7 +448,7 @@ const generateDTE = () => {
     });
 };
 
-const recordMovement = (data) => {
+const recordMovement = async (data) => {
     const entry = {
         id: Date.now(),
         date: new Date().toLocaleString(),
@@ -502,8 +459,7 @@ const recordMovement = (data) => {
         total: data.total || 0,
         seller: data.seller || "Sistema"
     };
-    movementsHistory.unshift(entry);
-    localStorage.setItem('mariomari_movements_v4', JSON.stringify(movementsHistory));
+    await addDoc(collection(db, 'movements'), entry);
 };
 
 window.closeDteModal = () => {
@@ -559,7 +515,7 @@ const renderInventory = () => {
     });
 };
 
-window.editStock = (id) => {
+window.editStock = async (id) => {
     const product = products.find(p => p.id === id);
     if (!product) return;
 
@@ -569,7 +525,7 @@ window.editStock = (id) => {
         if (!isNaN(stockInt) && stockInt >= 0) {
             const diff = stockInt - product.stock;
             if (diff !== 0) {
-                recordMovement({
+                await recordMovement({
                     type: 'entry',
                     docType: diff > 0 ? 'INGRESO' : 'AJUSTE',
                     items: [`${Math.abs(diff)}x ${product.name} (${diff > 0 ? 'Aumento' : 'Baja'})`],
@@ -577,9 +533,10 @@ window.editStock = (id) => {
                     seller: "Admin (Manual)"
                 });
             }
-            product.stock = stockInt;
-            localStorage.setItem('mariomari_products_v4', JSON.stringify(products));
-            renderInventory();
+            if (product.docId) {
+                const prodRef = doc(db, 'products', product.docId);
+                await updateDoc(prodRef, { stock: stockInt });
+            }
         } else {
             alert('Valor inválido');
         }
@@ -692,29 +649,42 @@ if (addProductForm) {
         });
     }
 
-    addProductForm.addEventListener('submit', (e) => {
+    addProductForm.addEventListener('submit', async (e) => {
 
         e.preventDefault();
+
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "Guardando...";
 
         const name = document.getElementById('new-prod-name').value;
         const category = document.getElementById('new-prod-category').value;
         const price = parseInt(document.getElementById('new-prod-price').value);
         const stock = parseInt(document.getElementById('new-prod-stock').value);
 
-        let id = document.getElementById('new-prod-id').value;
+        let idParam = document.getElementById('new-prod-id').value;
         const associatedDoc = document.getElementById('new-prod-doc').value;
-        const imageUrl = document.getElementById('new-prod-image').value;
+        const imageUrlParam = document.getElementById('new-prod-image').value;
 
         let finalImages = [];
 
-        // Priority 1: Uploaded files list (Accumulated)
-        if (uploadedImagesList.length > 0) {
-            finalImages = [...uploadedImagesList];
+        // Upload images to Firebase Storage
+        for (let i = 0; i < uploadedImagesList.length; i++) {
+            const base64 = uploadedImagesList[i];
+            const storagePath = `products/${Date.now()}_${i}.jpg`;
+            const storageRef = ref(storage, storagePath);
+            try {
+                const snapshot = await uploadString(storageRef, base64, 'data_url');
+                const downloadURL = await getDownloadURL(snapshot.ref);
+                finalImages.push(downloadURL);
+            } catch (err) {
+                console.error("Error uploading image:", err);
+            }
         }
 
-        // Priority 2: URL input (add to list if exists)
-        if (imageUrl) {
-            finalImages.push(imageUrl);
+        // Priority 2: URL input
+        if (imageUrlParam) {
+            finalImages.push(imageUrlParam);
         }
 
         // Fallback
@@ -722,53 +692,48 @@ if (addProductForm) {
             finalImages.push('assets/images/products/generador.jpg');
         }
 
-        if (!name || isNaN(price) || isNaN(stock)) {
-            alert("Por favor complete todos los campos requeridos correctamente.");
-            return;
-        }
-
-        if (id) {
-            id = parseInt(id);
-            if (products.some(p => p.id === id)) {
-                alert("El ID ya existe. Por favor elija otro.");
-                return;
-            }
+        let finalId;
+        if (idParam) {
+            finalId = parseInt(idParam);
         } else {
-            // Auto ID: Find max ID + 1
             const maxId = products.reduce((max, p) => p.id > max ? p.id : max, 0);
-            id = maxId + 1;
+            finalId = maxId + 1;
         }
 
         const newProduct = {
-            id: id,
+            id: finalId,
             name: name,
             category: category,
             price: price,
             oldPrice: null,
-            image: finalImages[0], // Primary image for backward compatibility
-            images: finalImages,   // All images
+            image: finalImages[0],
+            images: finalImages,
             stock: stock,
             document: associatedDoc || '---'
         };
 
-        products.push(newProduct);
-        localStorage.setItem('mariomari_products_v4', JSON.stringify(products));
+        try {
+            await addDoc(collection(db, 'products'), newProduct);
+            await recordMovement({
+                type: 'entry',
+                docType: 'NUEVO',
+                items: [`Ingreso inicial: ${stock}x ${name}`],
+                total: 0,
+                seller: "Admin"
+            });
 
-        recordMovement({
-            type: 'entry',
-            docType: 'NUEVO',
-            items: [`Ingreso inicial: ${stock}x ${name}`],
-            total: 0,
-            seller: "Admin"
-        });
-
-        alert(`Producto "${name}" agregado correctamente!`);
-        addProductForm.reset();
-        document.getElementById('image-preview-container').style.display = 'none';
-        document.getElementById('image-preview-container').innerHTML = '';
-        uploadedImagesList = [];
-        addProductModal.classList.remove('open');
-        renderInventory();
+            alert(`Producto "${name}" agregado correctamente!`);
+            addProductForm.reset();
+            document.getElementById('image-preview-container').style.display = 'none';
+            document.getElementById('image-preview-container').innerHTML = '';
+            uploadedImagesList = [];
+            addProductModal.classList.remove('open');
+        } catch (err) {
+            alert("Error al guardar: " + err.message);
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Guardar Producto";
+        }
     });
 }
 

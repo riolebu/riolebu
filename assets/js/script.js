@@ -1,3 +1,6 @@
+import { db } from './firebase-config.js';
+import { collection, onSnapshot, query, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
 const defaultProducts = [
     {
         id: 1,
@@ -91,17 +94,30 @@ const defaultProducts = [
     }
 ];
 
-// Load products from LocalStorage or use default
-let products = JSON.parse(localStorage.getItem('mariomari_products_v4')) || defaultProducts;
+// State
+let products = [];
 
-// Ensure local storage is synced initially if it was empty
-if (!localStorage.getItem('mariomari_products_v4')) {
-    localStorage.setItem('mariomari_products_v4', JSON.stringify(products));
-}
+// Firestore Listener for Products
+const productsRef = collection(db, 'products');
+onSnapshot(productsRef, (snapshot) => {
+    products = snapshot.docs.map(doc => ({
+        docId: doc.id,
+        ...doc.data()
+    }));
 
-// Helper to save products to storage
+    // If first time and empty? (Migration helper - optional)
+    if (products.length === 0) {
+        console.log("No hay productos en Firestore. Usando predeterminados.");
+        products = defaultProducts;
+    }
+
+    renderProducts();
+    renderAridosProducts();
+});
+
+// Helper to save products - used in older logic, now redirects to Firebase in admin
 const saveProducts = () => {
-    localStorage.setItem('mariomari_products_v4', JSON.stringify(products));
+    // Products are now saved via Firestore in admin.js
 };
 
 
@@ -155,7 +171,7 @@ const formatPrice = (price) => {
 };
 
 // Render Products
-const renderProducts = (category = 'all', searchTerm = '') => {
+window.renderProducts = (category = 'all', searchTerm = '') => {
     if (!productsContainer) return;
 
     productsContainer.innerHTML = '';
@@ -354,7 +370,7 @@ navLinks.forEach(link => {
 });
 
 // Render Áridos Products (for the dedicated section)
-const renderAridosProducts = () => {
+window.renderAridosProducts = () => {
     const aridosContainer = document.getElementById('aridos-products-container');
     if (!aridosContainer) return;
 
@@ -434,14 +450,12 @@ const cartItemsContainer = document.getElementById('cart-items');
 const cartTotalAmount = document.getElementById('cart-total-amount');
 const cartTrigger = document.querySelector('.cart-trigger'); // Trigger in header
 
-// Toggle Cart
-const toggleCart = () => {
+window.toggleCart = () => {
     cartDrawer.classList.toggle('open');
     cartOverlay.classList.toggle('open');
 };
 
-// Open Cart
-const openCart = () => {
+window.openCart = () => {
     cartDrawer.classList.add('open');
     cartOverlay.classList.add('open');
 };
@@ -487,7 +501,7 @@ window.changeCardImage = (id, direction, event) => {
 };
 
 // Render Cart Items
-const renderCartItems = () => {
+window.renderCartItems = () => {
     cartItemsContainer.innerHTML = '';
 
     if (cart.length === 0) {
