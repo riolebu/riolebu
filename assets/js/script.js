@@ -105,10 +105,10 @@ onSnapshot(productsRef, (snapshot) => {
         ...doc.data()
     }));
 
-    // If first time and empty? (Migration helper - optional)
+    // If first time and empty?
     if (products.length === 0) {
-        console.log("No hay productos en Firestore. Usando predeterminados.");
-        products = defaultProducts;
+        console.log("No hay productos en Firestore.");
+        productsContainer.innerHTML = '<div class="no-results"><p>No hay productos disponibles.</p></div>';
     }
 
     renderProducts();
@@ -251,24 +251,7 @@ window.renderProducts = (category = 'all', searchTerm = '') => {
 };
 
 // Add to Cart Function
-window.addToCart = (id) => {
-    const product = products.find(p => p.id === id);
-    if (product) {
-        cart.push(product);
-        updateCartCount();
 
-        // Visual feedback
-        const btn = event.target.closest('.btn-add');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> Agregado';
-        btn.style.backgroundColor = 'var(--success)';
-
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.style.backgroundColor = '';
-        }, 1500);
-    }
-};
 
 
 
