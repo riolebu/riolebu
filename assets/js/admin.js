@@ -865,6 +865,15 @@ if (addProductForm) {
         const price = parseInt(document.getElementById('new-prod-price').value);
         const stock = parseInt(document.getElementById('new-prod-stock').value);
 
+        // Validar que no exista un producto con el mismo nombre
+        const existingProduct = products.find(p => p.name.toLowerCase() === name.toLowerCase());
+        if (existingProduct) {
+            alert(`Ya existe un producto con el nombre "${name}".\n\nPor favor, usa un nombre diferente.`);
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Guardar Producto";
+            return;
+        }
+
         let idParam = document.getElementById('new-prod-id').value;
         const associatedDoc = document.getElementById('new-prod-doc').value;
         const imageUrlParam = document.getElementById('new-prod-image').value;
