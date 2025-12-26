@@ -1,0 +1,63 @@
+# Reglas de Firebase Storage para Riolebu
+
+## IMPORTANTE: Configurar estas reglas en Firebase Console
+
+Para que la subida de imágenes funcione correctamente, debes configurar las reglas de Firebase Storage.
+
+### Pasos para configurar:
+
+1. Ve a [Firebase Console](https://console.firebase.google.com/)
+2. Selecciona el proyecto **riolebu-b932d**
+3. En el menú lateral, ve a **Storage**
+4. Haz clic en la pestaña **Rules** (Reglas)
+5. Reemplaza las reglas existentes con las siguientes:
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+6. Haz clic en **Publicar** (Publish)
+
+### Explicación de las reglas:
+
+- `allow read, write: if true;` - Permite lectura y escritura a cualquier usuario (para desarrollo)
+- `match /{allPaths=**}` - Aplica a todos los archivos en Storage
+
+### Reglas de producción (para el futuro):
+
+Cuando el sistema esté en producción, puedes usar reglas más seguras:
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /products/{fileName} {
+      // Permitir lectura a todos
+      allow read: if true;
+      
+      // Permitir escritura solo a usuarios autenticados
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+### Verificación:
+
+Después de configurar las reglas, intenta subir una imagen de producto nuevamente. Deberías ver en la consola del navegador:
+
+```
+[UPLOAD] Storage bucket: riolebu-b932d.firebasestorage.app
+[UPLOAD] Iniciando subida a Firebase Storage...
+[UPLOAD] Imagen subida exitosamente, obteniendo URL...
+[UPLOAD] URL obtenida: https://firebasestorage.googleapis.com/...
+```
+
+Si ves un error de permisos, verifica que las reglas se hayan publicado correctamente.
