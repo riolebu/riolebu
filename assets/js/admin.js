@@ -519,23 +519,47 @@ const renderInventory = () => {
     invBody.innerHTML = '';
 
     filtered.forEach(p => {
-        const row = document.createElement('tr');
-        if (p.stock <= 5) row.classList.add('stock-low'); // Red highlight
+        if (p.status === 'inactive') {
+            row.style.opacity = '0.5';
+            row.style.background = '#f0f0f0';
+        }
+
+        const isInactive = p.status === 'inactive';
 
         row.innerHTML = `
             <td>${p.id}</td>
-            <td>${p.name}</td>
+            <td>${p.name} ${isInactive ? '(Inactivo)' : ''}</td>
             <td>${p.category}</td>
             <td>${formatPrice(p.price)}</td>
             <td style="${p.stock <= 5 ? 'color: var(--admin-danger); font-weight: bold;' : ''}">${p.stock}</td>
             <td>
                 <!-- Edit button removed -->
                 <button class="btn-action btn-history" onclick="openHistory(${p.id})" title="Ver Historial" style="background-color: #607D8B; color: white;"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                <button class="btn-action btn-delete" onclick="alert('Funcionalidad no implementada en demo.')"><i class="fa-solid fa-trash"></i></button>
+                ${isInactive
+                ? `<button class="btn-action btn-restore" onclick="toggleProductStatus(${p.id}, 'active')" title="Reactivar" style="background-color: #4CAF50; color: white;"><i class="fa-solid fa-trash-arrow-up"></i></button>`
+                : `<button class="btn-action btn-delete" onclick="toggleProductStatus(${p.id}, 'inactive')" title="Desactivar"><i class="fa-solid fa-trash"></i></button>`
+            }
             </td>
         `;
         invBody.appendChild(row);
     });
+};
+
+window.toggleProductStatus = async (id, newStatus) => {
+    const product = products.find(p => p.id === id);
+    if (!product || !product.docId) return;
+
+    if (!confirm(`¿Estás seguro de cambiar el estado de "${product.name}" a ${newStatus === 'active' ? 'ACTIVO' : 'INACTIVO'}?`)) {
+        return;
+    }
+
+    try {
+        const prodRef = doc(db, 'products', product.docId);
+        await updateDoc(prodRef, { status: newStatus });
+        // No need to alert, UI updates via snapshot
+    } catch (err) {
+        alert("Error al actualizar estado: " + err.message);
+    }
 };
 
 window.editStock = async (id) => {

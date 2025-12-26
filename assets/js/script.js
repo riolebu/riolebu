@@ -103,7 +103,7 @@ onSnapshot(productsRef, (snapshot) => {
     products = snapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
-    }));
+    })).filter(p => p.status !== 'inactive'); // Filter out inactive products
 
     // If first time and empty?
     if (products.length === 0) {
