@@ -519,10 +519,8 @@ const renderInventory = () => {
     invBody.innerHTML = '';
 
     filtered.forEach(p => {
-        if (p.status === 'inactive') {
-            row.style.opacity = '0.5';
-            row.style.background = '#f0f0f0';
-        }
+        const row = document.createElement('tr');
+        if (p.stock <= 5) row.classList.add('stock-low');
 
         const isInactive = p.status === 'inactive';
 
