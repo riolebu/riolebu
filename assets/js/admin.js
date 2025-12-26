@@ -1211,24 +1211,33 @@ renderMovementsHistory();
 
 // OVERRIDE: Fixed password reset logic with Admin Override
 window.changeUserPassword = async (docId) => {
+    const user = adminUsers.find(u => u.docId === docId);
+    if (!user) return;
+
     let currentUser = null;
     try {
         currentUser = JSON.parse(sessionStorage.getItem('mariomari_admin_user'));
-    } catch (e) { }
+    } catch (e) { console.error("Error getting current user", e); }
 
-    const isSelf = currentUser && currentUser.docId === docId;
+    // PROTECCIÓN: Solo el Master Admin puede cambiar su propia contraseña
+    if (user.email === 'admin@mariomari.cl') {
+        if (!currentUser || currentUser.email !== 'admin@mariomari.cl') {
+            alert('⚠️ ACCESO DENEGADO\n\nSolo el Administrador Master puede cambiar su propia contraseña.');
+            return;
+        }
+    }
+
+    const isSelf = currentUser && currentUser.email === user.email;
 
     if (isSelf) {
-        const oldPass = prompt("Por seguridad, ingrese su contraseña ACTUAL:");
+        const oldPass = prompt("Ingrese su contraseña ACTUAL:");
         if (oldPass === null) return;
-        try {
-            const userRef = doc(db, 'users', docId);
-            const userSnap = await getDoc(userRef);
-            if (!userSnap.exists()) { alert("Usuario no encontrado."); return; }
-            if (userSnap.data().password !== oldPass) { alert("Contraseña incorrecta."); return; }
-        } catch (e) { alert("Error: " + e.message); return; }
+        if (oldPass !== user.password) {
+            alert("Contraseña actual incorrecta.");
+            return;
+        }
     } else {
-        if (!confirm("¿Restablecer contraseña de este usuario?")) return;
+        if (!confirm(`¿Restablecer la contraseña de "${user.name}"?`)) return;
     }
 
     const newPass = prompt("Ingrese la NUEVA contraseña (mínimo 6 caracteres):");
