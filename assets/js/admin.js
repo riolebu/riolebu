@@ -202,21 +202,33 @@ const renderUsers = () => {
     if (!tbody) return;
     tbody.innerHTML = '';
 
+    let currentUser = null;
+    try {
+        currentUser = JSON.parse(sessionStorage.getItem('mariomari_admin_user'));
+    } catch (e) { console.error("Error checking current user", e); }
+
     adminUsers.forEach(u => {
         const row = document.createElement('tr');
         const isActive = u.status === 'active';
+
+        let actionButtons = '';
+        if (isActive) {
+            actionButtons = `<button class="btn-action btn-delete" onclick="toggleUserStatus('${u.docId}', 'inactive')" title="Desactivar"><i class="fa-solid fa-ban"></i></button>`;
+        } else {
+            actionButtons = `<button class="btn-action btn-restore" onclick="toggleUserStatus('${u.docId}', 'active')" title="Activar"><i class="fa-solid fa-check"></i></button>`;
+        }
+
+        // Only allow password change for the logged-in user
+        if (currentUser && currentUser.email === u.email && isActive) {
+            actionButtons += ` <button class="btn-action btn-edit" onclick="changeUserPassword('${u.docId}')" title="Cambiar Contraseña" style="background-color: #FFC107; color: black;"><i class="fa-solid fa-key"></i></button>`;
+        }
 
         row.innerHTML = `
             <td>${u.name}</td>
             <td>${u.email}</td>
             <td>${u.role}</td>
             <td><span style="color: ${isActive ? 'green' : 'red'}; font-weight: bold;">${isActive ? 'Activo' : 'Inactivo'}</span></td>
-            <td>
-                ${isActive
-                ? `<button class="btn-action btn-delete" onclick="toggleUserStatus('${u.docId}', 'inactive')" title="Desactivar"><i class="fa-solid fa-ban"></i></button>`
-                : `<button class="btn-action btn-restore" onclick="toggleUserStatus('${u.docId}', 'active')" title="Activar"><i class="fa-solid fa-check"></i></button>`
-            }
-            </td>
+            <td>${actionButtons}</td>
         `;
         tbody.appendChild(row);
     });
@@ -253,6 +265,25 @@ window.toggleUserStatus = async (docId, newStatus) => {
         await updateDoc(doc(db, 'users', docId), { status: newStatus });
     } catch (e) {
         alert("Error: " + e.message);
+    }
+};
+
+window.changeUserPassword = async (docId) => {
+    const newPass = prompt("Ingrese la nueva contraseña (mínimo 6 caracteres):");
+    if (newPass === null) return;
+    if (newPass.length < 6) {
+        alert("La contraseña es muy corta.");
+        return;
+    }
+
+    try {
+        await updateDoc(doc(db, 'users', docId), { password: newPass });
+        alert("Contraseña actualizada correctamente. Por favor inicie sesión nuevamente.");
+        // Logout via button click to reuse logout logic
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.click();
+    } catch (e) {
+        alert("Error al actualizar contraseña: " + e.message);
     }
 };
 
