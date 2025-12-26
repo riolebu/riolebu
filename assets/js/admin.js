@@ -1165,3 +1165,36 @@ populateUserSelect();
 renderPosCart();
 renderInventory();
 renderMovementsHistory();
+
+// OVERRIDE: Fixed password reset logic with Admin Override
+window.changeUserPassword = async (docId) => {
+    let currentUser = null;
+    try {
+        currentUser = JSON.parse(sessionStorage.getItem('mariomari_admin_user'));
+    } catch (e) { }
+
+    const isSelf = currentUser && currentUser.docId === docId;
+
+    if (isSelf) {
+        const oldPass = prompt("Por seguridad, ingrese su contraseña ACTUAL:");
+        if (oldPass === null) return;
+        try {
+            const userRef = doc(db, 'users', docId);
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) { alert("Usuario no encontrado."); return; }
+            if (userSnap.data().password !== oldPass) { alert("Contraseña incorrecta."); return; }
+        } catch (e) { alert("Error: " + e.message); return; }
+    } else {
+        if (!confirm("¿Restablecer contraseña de este usuario?")) return;
+    }
+
+    const newPass = prompt("Ingrese la NUEVA contraseña (mínimo 6 caracteres):");
+    if (newPass === null) return;
+    if (newPass.length < 6) { alert("Mínimo 6 caracteres."); return; }
+
+    try {
+        await updateDoc(doc(db, 'users', docId), { password: newPass });
+        alert("Contraseña actualizada.");
+        if (isSelf) { document.getElementById('logout-btn').click(); }
+    } catch (e) { alert("Error: " + e.message); }
+};
