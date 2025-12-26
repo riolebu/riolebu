@@ -4,20 +4,11 @@ import { ref, uploadString, getDownloadURL } from "https://www.gstatic.com/fireb
 
 const ADMIN_PASS = "admin123";
 
-// --- VISUAL DEBUGGER START ---
-const debugDiv = document.createElement('div');
-debugDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; background:rgba(0,0,0,0.8); color:#0f0; padding:10px; z-index:9999; font-family:monospace; font-size:14px; pointer-events:none;";
-debugDiv.id = 'debug-overlay';
-debugDiv.innerHTML = "STATUS: JS Cargado correctamente...<br>";
-document.body.appendChild(debugDiv);
-
+// --- VISUAL DEBUGGER REMOVED ---
 function logDebug(msg) {
-    const el = document.getElementById('debug-overlay');
-    if (el) el.innerHTML += `> ${msg}<br>`;
     console.log(`[DEBUG] ${msg}`);
 }
 logDebug("Iniciando Firebase...");
-// --- VISUAL DEBUGGER END ---
 
 const defaultProducts = [
     {
@@ -538,7 +529,7 @@ const renderInventory = () => {
             <td>${formatPrice(p.price)}</td>
             <td style="${p.stock <= 5 ? 'color: var(--admin-danger); font-weight: bold;' : ''}">${p.stock}</td>
             <td>
-                <button class="btn-action btn-edit" onclick="editStock(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                <!-- Edit button removed -->
                 <button class="btn-action btn-history" onclick="openHistory(${p.id})" title="Ver Historial" style="background-color: #607D8B; color: white;"><i class="fa-solid fa-clock-rotate-left"></i></button>
                 <button class="btn-action btn-delete" onclick="alert('Funcionalidad no implementada en demo.')"><i class="fa-solid fa-trash"></i></button>
             </td>
