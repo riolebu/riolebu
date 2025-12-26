@@ -207,6 +207,12 @@ const renderUsers = () => {
         currentUser = JSON.parse(sessionStorage.getItem('mariomari_admin_user'));
     } catch (e) { console.error("Error checking current user", e); }
 
+    const roleLabels = {
+        'admin': 'Administrador',
+        'sales': 'Venta',
+        'sales_inventory': 'Venta e Inventario'
+    };
+
     adminUsers.forEach(u => {
         const row = document.createElement('tr');
         const isActive = u.status === 'active';
@@ -231,7 +237,7 @@ const renderUsers = () => {
         row.innerHTML = `
             <td>${u.name}</td>
             <td>${u.email}</td>
-            <td>${u.role}</td>
+            <td>${roleLabels[u.role] || u.role || 'Administrador'}</td>
             <td><span style="color: ${isActive ? 'green' : 'red'}; font-weight: bold;">${isActive ? 'Activo' : 'Inactivo'}</span></td>
             <td>${actionButtons}</td>
         `;
@@ -265,6 +271,7 @@ if (btnAddUser && modalAddUser) {
         e.preventDefault();
         const name = document.getElementById('new-user-name').value.trim();
         const email = document.getElementById('new-user-email').value.trim();
+        const role = document.getElementById('new-user-role').value;
         const password = document.getElementById('new-user-pass').value;
 
         if (password.length < 6) {
@@ -284,7 +291,7 @@ if (btnAddUser && modalAddUser) {
                 name,
                 email,
                 password,
-                role: 'admin',
+                role,
                 status: 'active'
             });
             alert("Usuario creado exitosamente");
@@ -868,23 +875,23 @@ if (addProductForm) {
         if (uploadedImagesList.length > 0) {
             console.log(`[UPLOAD] Iniciando subida de ${uploadedImagesList.length} imagen(es)...`);
             btnSubmit.textContent = `Subiendo imágenes (0/${uploadedImagesList.length})...`;
-            
+
             for (let i = 0; i < uploadedImagesList.length; i++) {
                 try {
                     console.log(`[UPLOAD] Subiendo imagen ${i + 1}/${uploadedImagesList.length}...`);
                     btnSubmit.textContent = `Subiendo imágenes (${i + 1}/${uploadedImagesList.length})...`;
-                    
+
                     const base64 = uploadedImagesList[i];
                     const storagePath = `products/${Date.now()}_${i}.jpg`;
                     const storageRef = ref(storage, storagePath);
-                    
+
                     console.log(`[UPLOAD] Ruta de almacenamiento: ${storagePath}`);
                     const snapshot = await uploadString(storageRef, base64, 'data_url');
                     console.log(`[UPLOAD] Imagen subida exitosamente, obteniendo URL...`);
-                    
+
                     const downloadURL = await getDownloadURL(snapshot.ref);
                     console.log(`[UPLOAD] URL obtenida: ${downloadURL}`);
-                    
+
                     finalImages.push(downloadURL);
                 } catch (err) {
                     console.error(`[UPLOAD ERROR] Error al subir imagen ${i + 1}:`, err);
@@ -931,7 +938,7 @@ if (addProductForm) {
         try {
             console.log(`[SAVE] Guardando producto en Firestore...`, newProduct);
             await addDoc(collection(db, 'products'), newProduct);
-            
+
             console.log(`[SAVE] Registrando movimiento de inventario...`);
             await recordMovement({
                 type: 'entry',
