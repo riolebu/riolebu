@@ -394,6 +394,35 @@
         </div>
     </div>
 
+    <!-- User Creation Modal -->
+    <div id="add-user-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Nuevo Usuario Administrador</h3>
+                <button class="close-modal" id="close-user-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="add-user-form">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="new-user-name" required placeholder="Nombre completo">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="new-user-email" required placeholder="correo@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="new-user-pass" required minlength="6" placeholder="******">
+                    <small style="color: #666; display: block; margin-top: 5px; font-size: 0.85rem;">
+                        <i class="fa-solid fa-circle-info"></i> Mínimo 6 caracteres.
+                    </small>
+                </div>
+                <button type="submit" class="btn-primary-modal" style="width: 100%; margin-top: 15px;">Crear
+                    Usuario</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module" src="assets/js/admin.js"></script>
 </body>
 

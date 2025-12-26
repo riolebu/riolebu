@@ -235,16 +235,39 @@ const renderUsers = () => {
 };
 
 const btnAddUser = document.getElementById('btn-add-user');
-if (btnAddUser) {
-    btnAddUser.addEventListener('click', async () => {
-        const name = prompt("Nombre del usuario:");
-        if (!name) return;
-        const email = prompt("Email del usuario:");
-        if (!email) return;
-        const password = prompt("Contraseña (min 6 chars):");
-        if (!password || password.length < 6) return alert("Contraseña inválida");
+const modalAddUser = document.getElementById('add-user-modal');
+const formAddUser = document.getElementById('add-user-form');
+const closeUserModal = document.getElementById('close-user-modal');
+
+if (btnAddUser && modalAddUser) {
+    btnAddUser.addEventListener('click', () => {
+        formAddUser.reset();
+        modalAddUser.classList.add('active');
+    });
+
+    closeUserModal.addEventListener('click', () => {
+        modalAddUser.classList.remove('active');
+    });
+
+    formAddUser.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('new-user-name').value.trim();
+        const email = document.getElementById('new-user-email').value.trim();
+        const password = document.getElementById('new-user-pass').value;
+
+        if (password.length < 6) {
+            alert("La contraseña debe tener al menos 6 caracteres.");
+            return;
+        }
 
         try {
+            // Check if email already exists (optional but good)
+            const exists = adminUsers.some(u => u.email === email);
+            if (exists) {
+                alert("Ya existe un usuario con este correo electrónico.");
+                return;
+            }
+
             await addDoc(collection(db, 'users'), {
                 name,
                 email,
@@ -253,6 +276,7 @@ if (btnAddUser) {
                 status: 'active'
             });
             alert("Usuario creado exitosamente");
+            modalAddUser.classList.remove('active');
         } catch (e) {
             alert("Error al crear usuario: " + e.message);
         }
@@ -269,21 +293,44 @@ window.toggleUserStatus = async (docId, newStatus) => {
 };
 
 window.changeUserPassword = async (docId) => {
-    const newPass = prompt("Ingrese la nueva contraseña (mínimo 6 caracteres):");
-    if (newPass === null) return;
-    if (newPass.length < 6) {
-        alert("La contraseña es muy corta.");
-        return;
-    }
+    // 1. Prompt for old password
+    const oldPass = prompt("Por seguridad, ingrese su contraseña ACTUAL:");
+    if (oldPass === null) return; // Cancelled
 
+    // Verify against current session user first (to avoid extra reads, though DB read is safer)
+    // We'll read from DB to be sure
     try {
-        await updateDoc(doc(db, 'users', docId), { password: newPass });
+        const userRef = doc(db, 'users', docId);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+            alert("Usuario no encontrado.");
+            return;
+        }
+
+        const userData = userSnap.data();
+        if (userData.password !== oldPass) {
+            alert("La contraseña actual es INCORRECTA. No se puede realizar el cambio.");
+            return;
+        }
+
+        // 2. Prompt for new password
+        const newPass = prompt("Ingrese la NUEVA contraseña (mínimo 6 caracteres):");
+        if (newPass === null) return;
+
+        if (newPass.length < 6) {
+            alert("La nueva contraseña es muy corta. Mínimo 6 caracteres.");
+            return;
+        }
+
+        await updateDoc(userRef, { password: newPass });
         alert("Contraseña actualizada correctamente. Por favor inicie sesión nuevamente.");
-        // Logout via button click to reuse logout logic
+
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) logoutBtn.click();
+
     } catch (e) {
-        alert("Error al actualizar contraseña: " + e.message);
+        alert("Error al validar/actualizar: " + e.message);
     }
 };
 
