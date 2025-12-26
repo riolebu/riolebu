@@ -874,6 +874,7 @@ if (addProductForm) {
         // Upload images to Firebase Storage
         if (uploadedImagesList.length > 0) {
             console.log(`[UPLOAD] Iniciando subida de ${uploadedImagesList.length} imagen(es)...`);
+            console.log(`[UPLOAD] Storage bucket: ${storage.app.options.storageBucket}`);
             btnSubmit.textContent = `Subiendo imágenes (0/${uploadedImagesList.length})...`;
 
             for (let i = 0; i < uploadedImagesList.length; i++) {
@@ -886,7 +887,16 @@ if (addProductForm) {
                     const storageRef = ref(storage, storagePath);
 
                     console.log(`[UPLOAD] Ruta de almacenamiento: ${storagePath}`);
-                    const snapshot = await uploadString(storageRef, base64, 'data_url');
+                    console.log(`[UPLOAD] Tamaño aproximado de imagen: ${Math.round(base64.length / 1024)} KB`);
+
+                    // Agregar timeout de 30 segundos
+                    const uploadPromise = uploadString(storageRef, base64, 'data_url');
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Timeout: La subida tardó más de 30 segundos')), 30000)
+                    );
+
+                    console.log(`[UPLOAD] Iniciando subida a Firebase Storage...`);
+                    const snapshot = await Promise.race([uploadPromise, timeoutPromise]);
                     console.log(`[UPLOAD] Imagen subida exitosamente, obteniendo URL...`);
 
                     const downloadURL = await getDownloadURL(snapshot.ref);
@@ -895,7 +905,28 @@ if (addProductForm) {
                     finalImages.push(downloadURL);
                 } catch (err) {
                     console.error(`[UPLOAD ERROR] Error al subir imagen ${i + 1}:`, err);
-                    alert(`Error al subir imagen ${i + 1}: ${err.message}\n\nEl producto se creará sin esta imagen.`);
+                    console.error(`[UPLOAD ERROR] Código de error:`, err.code);
+                    console.error(`[UPLOAD ERROR] Mensaje:`, err.message);
+                    console.error(`[UPLOAD ERROR] Detalles completos:`, {
+                        message: err.message,
+                        code: err.code,
+                        name: err.name,
+                        stack: err.stack
+                    });
+
+                    // Mostrar error más específico
+                    let errorMsg = `Error al subir imagen ${i + 1}: ${err.message}`;
+
+                    if (err.code === 'storage/unauthorized') {
+                        errorMsg += '\n\n⚠️ PROBLEMA DE PERMISOS en Firebase Storage.\n\nSolución:\n1. Ve a Firebase Console\n2. Storage → Rules\n3. Cambia las reglas para permitir escritura';
+                        console.error('[UPLOAD ERROR] Las reglas de Firebase Storage están bloqueando la subida.');
+                    } else if (err.message.includes('Timeout')) {
+                        errorMsg += '\n\n⏱️ La imagen es muy grande o la conexión es lenta.\n\nIntenta con una imagen más pequeña (< 1MB).';
+                    } else if (err.code === 'storage/unknown') {
+                        errorMsg += '\n\n❌ Error desconocido de Firebase Storage.\n\nVerifica tu conexión a Internet y las reglas de Storage.';
+                    }
+
+                    alert(errorMsg + '\n\nEl producto se creará sin esta imagen.');
                 }
             }
             console.log(`[UPLOAD] Proceso de subida completado. ${finalImages.length} imagen(es) subida(s) exitosamente.`);
