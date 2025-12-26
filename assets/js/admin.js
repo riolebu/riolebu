@@ -213,7 +213,10 @@ const renderUsers = () => {
 
         let actionButtons = '';
         if (isActive) {
-            actionButtons = `<button class="btn-action btn-delete" onclick="toggleUserStatus('${u.docId}', 'inactive')" title="Desactivar"><i class="fa-solid fa-ban"></i></button>`;
+            // Hide delete button for Master Admin
+            if (u.email !== 'admin@mariomari.cl') {
+                actionButtons = `<button class="btn-action btn-delete" onclick="toggleUserStatus('${u.docId}', 'inactive')" title="Desactivar"><i class="fa-solid fa-ban"></i></button>`;
+            }
         } else {
             actionButtons = `<button class="btn-action btn-restore" onclick="toggleUserStatus('${u.docId}', 'active')" title="Activar"><i class="fa-solid fa-check"></i></button>`;
         }
