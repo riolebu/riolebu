@@ -30,8 +30,7 @@
                             Inventario</a></li>
                     <li><a href="#" class="nav-item" data-tab="movements"><i class="fa-solid fa-list-check"></i>
                             Movimientos</a></li>
-                    <li><a href="#" class="nav-item" data-tab="users"><i class="fa-solid fa-users-gear"></i>
-                            Usuarios</a></li>
+
                     <li><a href="index.html" class="nav-item"><i class="fa-solid fa-globe"></i> Ver Tienda</a></li>
                 </ul>
             </nav>
@@ -174,34 +173,7 @@
                 </div>
             </section>
 
-            <!-- Users Management Section -->
-            <section id="users" class="tab-content">
-                <div class="inventory-header">
-                    <h1>Gestión de Usuarios</h1>
-                    <div class="inv-controls">
-                        <button class="btn-add" id="btn-add-user" style="background-color: var(--admin-accent);">
-                            <i class="fa-solid fa-user-plus"></i> Nuevo Usuario
-                        </button>
-                    </div>
-                </div>
 
-                <div class="inventory-table-wrapper">
-                    <table class="inventory-table">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Rol / Permisos</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="users-body">
-                            <!-- Rows via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
 
         </main>
     </div>
@@ -218,10 +190,7 @@
                 <input type="password" id="admin-password" placeholder="Contraseña" required>
                 <button type="submit">Ingresar</button>
                 <div style="margin-top: 15px; text-align: center;">
-                    <button type="button" id="btn-reset-admin"
-                        style="background: none; border: none; color: #666; font-size: 0.8rem; text-decoration: underline; cursor: pointer;">
-                        Restablecer Usuario Admin
-                    </button>
+
                 </div>
             </form>
         </div>
@@ -284,41 +253,7 @@
         </div>
     </div>
 
-    <!-- Add/Edit User Modal -->
-    <div id="user-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3 id="user-modal-title">Gestión de Usuario</h3>
-                <button class="close-modal" onclick="closeUserModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form id="user-form">
-                <input type="hidden" id="user-index">
-                <div class="form-group">
-                    <label>Nombre Completo</label>
-                    <input type="text" id="user-name" required>
-                </div>
-                <div class="form-group">
-                    <label>Correo Electrónico</label>
-                    <input type="email" id="user-email" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Contraseña</label>
-                        <input type="password" id="user-password" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Rol / Permisos</label>
-                        <select id="user-role">
-                            <option value="admin">Administrador (Acceso Total)</option>
-                            <option value="vendedor">Vendedor (Solo POS)</option>
-                            <option value="bodega">Bodeguero (Solo Inventario)</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="btn-primary-modal">Guardar Usuario</button>
-            </form>
-        </div>
-    </div>
+
     <div id="dte-modal" class="modal-overlay">
         <div class="modal-box dte-box">
             <div class="dte-paper">
@@ -429,7 +364,7 @@
         </div>
     </div>
 
-    <script src="assets/js/admin.js"></script>
+    <script type="module" src="assets/js/admin.js"></script>
 </body>
 
 </html>

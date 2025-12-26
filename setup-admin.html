@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Admin - Rio Lebu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background-color: #1976D2;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            text-align: left;
+            font-family: monospace;
+            font-size: 0.85rem;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .info {
+            color: #3498db;
+        }
+
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .status-ready {
+            background-color: #2ecc71;
+        }
+
+        .status-error {
+            background-color: #e74c3c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Restaurar Administrador</h1>
+        <p class="subtitle">Herramienta de Diagnóstico y Reparación</p>
+
+        <div style="margin-bottom: 20px;">
+            <span id="status-indicator" class="status-dot"></span>
+            <span id="status-text">Cargando sistema...</span>
+        </div>
+
+        <button id="btn-run" disabled>Esperando conexión...</button>
+
+        <div id="log"></div>
+
+        <div style="margin-top: 20px;">
+            <a href="admin.html" style="color: #2196F3; text-decoration: none;">&larr; Volver al Login</a>
+        </div>
+    </div>
+
+    <!-- Error Handler for Script Loading -->
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            const logDiv = document.getElementById('log');
+            const statusText = document.getElementById('status-text');
+            const statusIndicator = document.getElementById('status-indicator');
+
+            logDiv.style.display = 'block';
+            logDiv.innerHTML += `<div class="error">ERROR CRÍTICO: ${msg}</div>`;
+            logDiv.innerHTML += `<div class="info">En línea: ${lineNo}</div>`;
+
+            statusText.textContent = "Error de Sistema";
+            statusIndicator.classList.add('status-error');
+            return false;
+        };
+    </script>
+
+    <script type="module">
+        // Import directly from CDN to avoid local file module restrictions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        // UI References
+        const btn = document.getElementById('btn-run');
+        const logDiv = document.getElementById('log');
+        const statusText = document.getElementById('status-text');
+        const statusIndicator = document.getElementById('status-indicator');
+
+        const log = (msg, type = 'info') => {
+            logDiv.style.display = 'block';
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = `> ${msg}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+
+        // Configuration (Inlined to avoid import issues)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEujJWnPA3x_bWwfcOxvkyE259T7-fskM",
+            authDomain: "riolebu-b932d.firebaseapp.com",
+            projectId: "riolebu-b932d",
+            storageBucket: "riolebu-b932d.firebasestorage.app",
+            messagingSenderId: "298809741766",
+            appId: "1:298809741766:web:e3873c89caa5cc89bfa2c7"
+        };
+
+        let db;
+
+        try {
+            log("Inicializando Firebase...", 'info');
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+
+            // UI Ready
+            statusText.textContent = "Sistema Listo";
+            statusIndicator.classList.add('status-ready');
+            btn.disabled = false;
+            btn.textContent = "Crear/Verificar Admin";
+
+        } catch (e) {
+            log(`Error de Inicialización: ${e.message}`, 'error');
+            statusText.textContent = "Error de Configuración";
+            statusIndicator.classList.add('status-error');
+        }
+
+        btn.addEventListener('click', async () => {
+            if (!db) return;
+
+            btn.disabled = true;
+            btn.textContent = "Procesando...";
+            logDiv.innerHTML = ''; // Clear log
+
+            const masterAdmin = {
+                name: 'Administrador Master',
+                email: 'admin@mariomari.cl',
+                password: 'admin',
+                role: 'admin',
+                status: 'active'
+            };
+
+            try {
+                log("Conectando a base de datos...", 'info');
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, where("email", "==", masterAdmin.email));
+
+                log("Buscando usuario existente...", 'info');
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    log("Usuario encontrado. Actualizando...", 'info');
+                    const userDoc = querySnapshot.docs[0];
+                    await updateDoc(doc(db, 'users', userDoc.id), masterAdmin);
+
+                    log("--------------------------------", 'info');
+                    log("¡ADMINISTRADOR RESTAURADO!", 'success');
+                    log("--------------------------------", 'info');
+                    log(`Usuario: ${masterAdmin.email}`, 'success');
+                    log(`Clave:   ${masterAdmin.password}`, 'success');
+                    log("--------------------------------", 'info');
+                } else {
+                    log("Creando nuevo usuario...", 'info');
+                    await addDoc(usersRef, masterAdmin);
+
+                    log("--------------------------------", 'info');
+                    log("¡ADMINISTRADOR CREADO!", 'success');
+                    log("--------------------------------", 'info');
+                    log(`Usuario: ${masterAdmin.email}`, 'success');
+                    log(`Clave:   ${masterAdmin.password}`, 'success');
+                    log("--------------------------------", 'info');
+                }
+
+                alert("Proceso completado con éxito. Ahora puedes iniciar sesión.");
+
+            } catch (error) {
+                console.error(error);
+                log(`ERROR FATAL: ${error.message}`, 'error');
+
+                if (error.code === 'permission-denied') {
+                    log("CAUSA: Permisos denegados en Firestore.", 'error');
+                    log("SOLUCIÓN: Revisa las reglas de seguridad en Firebase Console.", 'error');
+                }
+
+                alert(`Ocurrió un error: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Ejecutar Nuevamente";
+            }
+        });
+    </script>
+</body>
+
+</html>

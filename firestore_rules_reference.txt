@@ -1,0 +1,23 @@
+// REGLAS TEMPORALES PARA FIRESTORE
+// Copia y pega esto en la pestaña "Rules" (Reglas) de tu Firestore Database en la Consola de Firebase.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Permitir leer/escribir a cualquiera (SOLO TEMPORALMENTE)
+    // Esto es necesario para crear tu primer usuario admin sin estar logueado.
+    
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+// NOTA: Una vez que hayas creado tu usuario admin y comprobado que puedes entrar,
+// deberíamos volver a cambiar estas reglas a algo más seguro, como:
+/*
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+*/

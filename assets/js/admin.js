@@ -4,6 +4,21 @@ import { ref, uploadString, getDownloadURL } from "https://www.gstatic.com/fireb
 
 const ADMIN_PASS = "admin123";
 
+// --- VISUAL DEBUGGER START ---
+const debugDiv = document.createElement('div');
+debugDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; background:rgba(0,0,0,0.8); color:#0f0; padding:10px; z-index:9999; font-family:monospace; font-size:14px; pointer-events:none;";
+debugDiv.id = 'debug-overlay';
+debugDiv.innerHTML = "STATUS: JS Cargado correctamente...<br>";
+document.body.appendChild(debugDiv);
+
+function logDebug(msg) {
+    const el = document.getElementById('debug-overlay');
+    if (el) el.innerHTML += `> ${msg}<br>`;
+    console.log(`[DEBUG] ${msg}`);
+}
+logDebug("Iniciando Firebase...");
+// --- VISUAL DEBUGGER END ---
+
 const defaultProducts = [
     {
         id: 1,
@@ -29,9 +44,7 @@ const defaultProducts = [
 let products = [];
 let cart = []; // Local cart for POS
 let movementsHistory = [];
-let adminUsers = JSON.parse(localStorage.getItem('mariomari_admin_users')) || [
-    { name: 'Administrador Master', email: 'admin@mariomari.cl', password: 'admin', role: 'admin', status: 'active' }
-];
+let adminUsers = []; // Will be populated from Firestore
 
 // Firestore Listeners
 const productsRef = collection(db, 'products');
@@ -51,6 +64,47 @@ onSnapshot(movementsQuery, (snapshot) => {
         ...doc.data()
     }));
     if (itemActiveTab === 'movements') renderMovementsHistory();
+});
+
+// Users Listener and Initialization
+const usersRef = collection(db, 'users');
+logDebug("Conectando a colección 'users'...");
+
+onSnapshot(usersRef, async (snapshot) => {
+    logDebug(`Snapshot recibido. Docs: ${snapshot.docs.length}`);
+    adminUsers = snapshot.docs.map(doc => ({
+        docId: doc.id,
+        ...doc.data()
+    }));
+
+    logDebug(`Usuarios procesados: ${adminUsers.length}`);
+
+    // Auto-initialize if empty
+    if (adminUsers.length === 0) {
+        logDebug("Lista vacía. Intentando auto-crear admin...");
+        // ... (rest of logic) ...
+        const masterAdmin = {
+            name: 'Administrador Master',
+            email: 'admin@mariomari.cl',
+            password: 'admin',
+            role: 'admin',
+            status: 'active'
+        };
+        try {
+            await addDoc(usersRef, masterAdmin);
+            logDebug("Auto-creación enviada.");
+        } catch (err) {
+            logDebug(`ERROR al crear: ${err.message}`);
+            console.error("Error auto-initializing admin:", err);
+        }
+    }
+
+    populateUserSelect();
+    logDebug("Select actualizado.");
+
+}, (error) => {
+    logDebug(`ERROR CRÍTICO: ${error.message} (${error.code})`);
+    console.error("Error listening to users:", error);
 });
 
 let itemActiveTab = 'pos';
@@ -90,7 +144,12 @@ const populateUserSelect = () => {
     // Clear except first option
     select.innerHTML = '<option value="" disabled selected>Seleccione Usuario</option>';
 
-    adminUsers.filter(u => u.status === 'active').forEach(user => {
+    const activeUsers = adminUsers.filter(u => u.status === 'active');
+    if (activeUsers.length === 0 && adminUsers.length > 0) {
+        alert("Alerta: Hay usuarios pero ninguno tiene status='active'");
+    }
+
+    activeUsers.forEach(user => {
         const option = document.createElement('option');
         option.value = user.email;
         option.textContent = `${user.name} (${user.role.toUpperCase()})`;
@@ -120,33 +179,7 @@ logoutBtn.addEventListener('click', () => {
     window.location.reload();
 });
 
-// Reset Admin User logic
-const resetAdminUser = () => {
-    const masterAdmin = {
-        name: 'Administrador Master',
-        email: 'admin@mariomari.cl',
-        password: 'admin',
-        role: 'admin',
-        status: 'active'
-    };
 
-    const existingIndex = adminUsers.findIndex(u => u.email === masterAdmin.email);
-
-    if (existingIndex !== -1) {
-        adminUsers[existingIndex] = masterAdmin;
-    } else {
-        adminUsers.push(masterAdmin);
-    }
-
-    localStorage.setItem('mariomari_admin_users', JSON.stringify(adminUsers));
-    populateUserSelect();
-    alert('Usuario Administrador Master reestablecido correctamente.\nEmail: admin@mariomari.cl\nPass: admin');
-};
-
-const btnResetAdmin = document.getElementById('btn-reset-admin');
-if (btnResetAdmin) {
-    btnResetAdmin.addEventListener('click', resetAdminUser);
-}
 
 
 // Tab Switching
@@ -167,7 +200,6 @@ navItems.forEach(item => {
         // Logic
         if (item.dataset.tab === 'inventory') renderInventory();
         if (item.dataset.tab === 'movements') renderMovementsHistory();
-        if (item.dataset.tab === 'users') renderAdminUsers();
         if (item.dataset.tab === 'pos') posInput.focus();
     });
 });
@@ -961,95 +993,7 @@ if (btnDailyReport) {
     });
 }
 
-/* --- Admin Users Module --- */
-const usersBody = document.getElementById('users-body');
-const btnAddUser = document.getElementById('btn-add-user');
-const userModal = document.getElementById('user-modal');
-const userForm = document.getElementById('user-form');
 
-const renderAdminUsers = () => {
-    if (!usersBody) return;
-    usersBody.innerHTML = '';
-
-    adminUsers.forEach((user, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td><span class="badge ${user.role}">${user.role.toUpperCase()}</span></td>
-            <td><span class="status-dot ${user.status}"></span> ${user.status === 'active' ? 'Activo' : 'Inactivo'}</td>
-            <td>
-                <button class="btn-action btn-edit" onclick="openUserModal(${index})"><i class="fa-solid fa-user-pen"></i></button>
-                <button class="btn-action btn-delete" onclick="deleteUser(${index})"><i class="fa-solid fa-user-minus"></i></button>
-            </td>
-        `;
-        usersBody.appendChild(row);
-    });
-};
-
-window.openUserModal = (index = -1) => {
-    const title = document.getElementById('user-modal-title');
-    const form = document.getElementById('user-form');
-    form.reset();
-
-    if (index >= 0) {
-        const user = adminUsers[index];
-        title.textContent = 'Editar Usuario';
-        document.getElementById('user-index').value = index;
-        document.getElementById('user-name').value = user.name;
-        document.getElementById('user-email').value = user.email;
-        document.getElementById('user-password').value = user.password;
-        document.getElementById('user-role').value = user.role;
-    } else {
-        title.textContent = 'Nuevo Usuario';
-        document.getElementById('user-index').value = -1;
-    }
-
-    userModal.classList.add('open');
-};
-
-window.closeUserModal = () => {
-    userModal.classList.remove('open');
-};
-
-if (userForm) {
-    userForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const index = parseInt(document.getElementById('user-index').value);
-        const userData = {
-            name: document.getElementById('user-name').value,
-            email: document.getElementById('user-email').value,
-            password: document.getElementById('user-password').value,
-            role: document.getElementById('user-role').value,
-            status: 'active'
-        };
-
-        if (index >= 0) {
-            adminUsers[index] = userData;
-            alert('Usuario actualizado correctamente');
-        } else {
-            adminUsers.push(userData);
-            alert('Usuario creado correctamente');
-        }
-
-        localStorage.setItem('mariomari_admin_users', JSON.stringify(adminUsers));
-        closeUserModal();
-        renderAdminUsers();
-        populateUserSelect(); // Update login list too
-    });
-}
-
-if (btnAddUser) {
-    btnAddUser.addEventListener('click', () => openUserModal());
-}
-
-window.deleteUser = (index) => {
-    if (confirm('¿Estás seguro de eliminar a este usuario?')) {
-        adminUsers.splice(index, 1);
-        localStorage.setItem('mariomari_admin_users', JSON.stringify(adminUsers));
-        renderAdminUsers();
-    }
-};
 
 // Init
 checkAuth();
@@ -1057,4 +1001,3 @@ populateUserSelect();
 renderPosCart();
 renderInventory();
 renderMovementsHistory();
-renderAdminUsers();
