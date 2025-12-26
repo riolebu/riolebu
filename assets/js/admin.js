@@ -865,28 +865,48 @@ if (addProductForm) {
         let finalImages = [];
 
         // Upload images to Firebase Storage
-        for (let i = 0; i < uploadedImagesList.length; i++) {
-            const base64 = uploadedImagesList[i];
-            const storagePath = `products/${Date.now()}_${i}.jpg`;
-            const storageRef = ref(storage, storagePath);
-            try {
-                const snapshot = await uploadString(storageRef, base64, 'data_url');
-                const downloadURL = await getDownloadURL(snapshot.ref);
-                finalImages.push(downloadURL);
-            } catch (err) {
-                console.error("Error uploading image:", err);
+        if (uploadedImagesList.length > 0) {
+            console.log(`[UPLOAD] Iniciando subida de ${uploadedImagesList.length} imagen(es)...`);
+            btnSubmit.textContent = `Subiendo imágenes (0/${uploadedImagesList.length})...`;
+            
+            for (let i = 0; i < uploadedImagesList.length; i++) {
+                try {
+                    console.log(`[UPLOAD] Subiendo imagen ${i + 1}/${uploadedImagesList.length}...`);
+                    btnSubmit.textContent = `Subiendo imágenes (${i + 1}/${uploadedImagesList.length})...`;
+                    
+                    const base64 = uploadedImagesList[i];
+                    const storagePath = `products/${Date.now()}_${i}.jpg`;
+                    const storageRef = ref(storage, storagePath);
+                    
+                    console.log(`[UPLOAD] Ruta de almacenamiento: ${storagePath}`);
+                    const snapshot = await uploadString(storageRef, base64, 'data_url');
+                    console.log(`[UPLOAD] Imagen subida exitosamente, obteniendo URL...`);
+                    
+                    const downloadURL = await getDownloadURL(snapshot.ref);
+                    console.log(`[UPLOAD] URL obtenida: ${downloadURL}`);
+                    
+                    finalImages.push(downloadURL);
+                } catch (err) {
+                    console.error(`[UPLOAD ERROR] Error al subir imagen ${i + 1}:`, err);
+                    alert(`Error al subir imagen ${i + 1}: ${err.message}\n\nEl producto se creará sin esta imagen.`);
+                }
             }
+            console.log(`[UPLOAD] Proceso de subida completado. ${finalImages.length} imagen(es) subida(s) exitosamente.`);
         }
 
         // Priority 2: URL input
         if (imageUrlParam) {
+            console.log(`[UPLOAD] Usando URL proporcionada: ${imageUrlParam}`);
             finalImages.push(imageUrlParam);
         }
 
         // Fallback
         if (finalImages.length === 0) {
+            console.log(`[UPLOAD] No hay imágenes, usando imagen por defecto.`);
             finalImages.push('assets/images/products/generador.jpg');
         }
+
+        btnSubmit.textContent = "Guardando producto...";
 
         let finalId;
         if (idParam) {
@@ -909,7 +929,10 @@ if (addProductForm) {
         };
 
         try {
+            console.log(`[SAVE] Guardando producto en Firestore...`, newProduct);
             await addDoc(collection(db, 'products'), newProduct);
+            
+            console.log(`[SAVE] Registrando movimiento de inventario...`);
             await recordMovement({
                 type: 'entry',
                 docType: 'NUEVO',
@@ -918,6 +941,7 @@ if (addProductForm) {
                 seller: "Admin"
             });
 
+            console.log(`[SAVE] Producto guardado exitosamente!`);
             alert(`Producto "${name}" agregado correctamente!`);
             addProductForm.reset();
             document.getElementById('image-preview-container').style.display = 'none';
@@ -925,6 +949,7 @@ if (addProductForm) {
             uploadedImagesList = [];
             addProductModal.classList.remove('open');
         } catch (err) {
+            console.error(`[SAVE ERROR] Error al guardar producto:`, err);
             alert("Error al guardar: " + err.message);
         } finally {
             btnSubmit.disabled = false;
