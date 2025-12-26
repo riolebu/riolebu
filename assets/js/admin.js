@@ -159,6 +159,7 @@ loginForm.addEventListener('submit', (e) => {
         sessionStorage.setItem('mariomari_admin_auth', 'true');
         sessionStorage.setItem('mariomari_admin_user', JSON.stringify(user));
         checkAuth();
+        hideMenusByRole(user); // Ocultar menús según rol
         alert(`Bienvenido, ${user.name}`);
     } else {
         alert('Contraseña incorrecta.');
@@ -170,6 +171,23 @@ logoutBtn.addEventListener('click', () => {
     window.location.reload();
 });
 
+// Ocultar menús según rol del usuario
+const hideMenusByRole = (user) => {
+    if (!user) return;
+
+    const inventarioMenu = document.querySelector('[data-section="inventario"]');
+    const usuariosMenu = document.querySelector('[data-section="usuarios"]');
+
+    // Solo admin y sales_inventory pueden ver Inventario
+    if (user.role === 'sales') {
+        if (inventarioMenu) inventarioMenu.style.display = 'none';
+    }
+
+    // Solo admin puede ver Usuarios
+    if (user.role !== 'admin') {
+        if (usuariosMenu) usuariosMenu.style.display = 'none';
+    }
+};
 
 
 
@@ -865,6 +883,19 @@ if (addProductForm) {
         const price = parseInt(document.getElementById('new-prod-price').value);
         const stock = parseInt(document.getElementById('new-prod-stock').value);
 
+        // Validar permisos: solo admin y sales_inventory pueden crear productos
+        let currentUser = null;
+        try {
+            currentUser = JSON.parse(sessionStorage.getItem('mariomari_admin_user'));
+        } catch (e) { }
+
+        if (currentUser && currentUser.role === 'sales') {
+            alert('⚠️ ACCESO DENEGADO\n\nNo tienes permisos para crear productos.\n\nSolo usuarios con rol "Administrador" o "Venta e Inventario" pueden gestionar el inventario.');
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Guardar Producto";
+            return;
+        }
+
         // Validar que no exista un producto con el mismo nombre
         const existingProduct = products.find(p => p.name.toLowerCase() === name.toLowerCase());
         if (existingProduct) {
@@ -956,7 +987,7 @@ if (addProductForm) {
                 docType: 'NUEVO',
                 items: [`Ingreso inicial: ${stock}x ${name}`],
                 total: 0,
-                seller: "Admin"
+                seller: currentUser ? currentUser.name : "Admin"
             });
 
             console.log(`[SAVE] Producto guardado exitosamente!`);
