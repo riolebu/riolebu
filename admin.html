@@ -418,9 +418,9 @@
                         <option value="sales_inventory">Venta e Inventario</option>
                     </select>
                     <small style="color: #666; display: block; margin-top: 5px; font-size: 0.85rem;">
-                        <i class="fa-solid fa-circle-info"></i> 
-                        <strong>Administrador:</strong> Acceso completo | 
-                        <strong>Venta:</strong> Solo POS | 
+                        <i class="fa-solid fa-circle-info"></i>
+                        <strong>Administrador:</strong> Acceso completo |
+                        <strong>Venta:</strong> Solo POS |
                         <strong>Venta e Inventario:</strong> POS + Inventario
                     </small>
                 </div>
@@ -434,6 +434,39 @@
                 <button type="submit" class="btn-primary-modal" style="width: 100%; margin-top: 15px;">Crear
                     Usuario</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Edit Images Modal -->
+    <div id="edit-images-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>Editar Imágenes del Producto</h3>
+                <button class="close-modal" id="close-edit-images-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 20px;">
+                <h4 id="edit-images-product-name" style="margin-bottom: 15px; color: var(--admin-primary);"></h4>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: bold;">Imágenes Actuales:</label>
+                    <div id="current-images-container"
+                        style="display: flex; flex-wrap: wrap; gap: 10px; min-height: 100px; border: 1px dashed #ccc; padding: 10px; border-radius: 4px; background: #f9f9f9;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: bold;">Agregar Nuevas
+                        Imágenes:</label>
+                    <input type="file" id="edit-images-file-input" accept="image/*" class="file-input" multiple>
+                    <small style="display: block; margin-top: 5px; color: #666;"><i class="fa-solid fa-circle-info"></i>
+                        Recomendación: Imágenes < 100KB</small>
+                            <div id="new-images-preview"
+                                style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+                </div>
+
+                <button type="button" class="btn-primary-modal" id="save-images-btn" style="width: 100%;"><i
+                        class="fa-solid fa-save"></i> Guardar Cambios</button>
+            </div>
         </div>
     </div>
 

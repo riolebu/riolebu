@@ -689,7 +689,7 @@ const renderInventory = () => {
             <td>${formatPrice(p.price)}</td>
             <td style="${p.stock <= 5 ? 'color: var(--admin-danger); font-weight: bold;' : ''}">${p.stock}</td>
             <td>
-                <!-- Edit button removed -->
+                <button class="btn-action btn-edit" onclick="openImageEditor(${p.id})" title="Editar Imágenes" style="background-color: #2196F3; color: white;"><i class="fa-solid fa-images"></i></button>
                 <button class="btn-action btn-history" onclick="openHistory(${p.id})" title="Ver Historial" style="background-color: #607D8B; color: white;"><i class="fa-solid fa-clock-rotate-left"></i></button>
                 ${isInactive
                 ? `<button class="btn-action btn-restore" onclick="toggleProductStatus(${p.id}, 'active')" title="Reactivar" style="background-color: #4CAF50; color: white;"><i class="fa-solid fa-trash-arrow-up"></i></button>`
@@ -1232,3 +1232,141 @@ window.changeUserPassword = async (docId) => {
         if (isSelf) { document.getElementById('logout-btn').click(); }
     } catch (e) { alert("Error: " + e.message); }
 };
+
+// ===== IMAGE EDITOR MODULE =====
+let currentEditingProduct = null;
+let currentProductImages = [];
+let newImagesToAdd = [];
+
+window.openImageEditor = (productId) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    currentEditingProduct = product;
+    currentProductImages = [...(product.images || [product.image])];
+    newImagesToAdd = [];
+
+    document.getElementById('edit-images-product-name').textContent = product.name;
+    renderCurrentImages();
+    document.getElementById('new-images-preview').innerHTML = '';
+    document.getElementById('edit-images-file-input').value = '';
+    document.getElementById('edit-images-modal').classList.add('open');
+};
+
+const renderCurrentImages = () => {
+    const container = document.getElementById('current-images-container');
+    container.innerHTML = '';
+
+    if (currentProductImages.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; width: 100%; padding: 20px;">No hay imágenes</p>';
+        return;
+    }
+
+    currentProductImages.forEach((imgSrc, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position: relative; display: inline-block;';
+
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.style.cssText = 'width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 2px solid #ddd;';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        deleteBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: #f44336; color: white; border: none; border-radius: 4px; padding: 5px 8px; cursor: pointer;';
+        deleteBtn.type = 'button';
+        deleteBtn.onclick = () => {
+            if (confirm('¿Eliminar esta imagen?')) {
+                currentProductImages.splice(index, 1);
+                renderCurrentImages();
+            }
+        };
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(deleteBtn);
+        container.appendChild(wrapper);
+    });
+};
+
+const editImagesFileInput = document.getElementById('edit-images-file-input');
+if (editImagesFileInput) {
+    editImagesFileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    newImagesToAdd.push(event.target.result);
+                    renderNewImagesPreview();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    });
+}
+
+const renderNewImagesPreview = () => {
+    const container = document.getElementById('new-images-preview');
+    container.innerHTML = '';
+
+    newImagesToAdd.forEach((base64, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position: relative; display: inline-block;';
+
+        const img = document.createElement('img');
+        img.src = base64;
+        img.style.cssText = 'width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 2px solid #4CAF50;';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        deleteBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: #f44336; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;';
+        deleteBtn.type = 'button';
+        deleteBtn.onclick = () => {
+            newImagesToAdd.splice(index, 1);
+            renderNewImagesPreview();
+        };
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(deleteBtn);
+        container.appendChild(wrapper);
+    });
+};
+
+const closeEditImagesModal = document.getElementById('close-edit-images-modal');
+if (closeEditImagesModal) {
+    closeEditImagesModal.addEventListener('click', () => {
+        document.getElementById('edit-images-modal').classList.remove('open');
+    });
+}
+
+const saveImagesBtn = document.getElementById('save-images-btn');
+if (saveImagesBtn) {
+    saveImagesBtn.addEventListener('click', async () => {
+        if (!currentEditingProduct) return;
+
+        const allImages = [...currentProductImages, ...newImagesToAdd];
+
+        if (allImages.length === 0) {
+            alert('Debe haber al menos una imagen');
+            return;
+        }
+
+        try {
+            saveImagesBtn.disabled = true;
+            saveImagesBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+            const prodRef = doc(db, 'products', currentEditingProduct.docId);
+            await updateDoc(prodRef, {
+                image: allImages[0],
+                images: allImages
+            });
+
+            alert('Imágenes actualizadas correctamente');
+            document.getElementById('edit-images-modal').classList.remove('open');
+        } catch (err) {
+            alert('Error al guardar: ' + err.message);
+        } finally {
+            saveImagesBtn.disabled = false;
+            saveImagesBtn.innerHTML = '<i class="fa-solid fa-save"></i> Guardar Cambios';
+        }
+    });
+}
