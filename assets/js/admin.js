@@ -191,9 +191,70 @@ navItems.forEach(item => {
         // Logic
         if (item.dataset.tab === 'inventory') renderInventory();
         if (item.dataset.tab === 'movements') renderMovementsHistory();
+        if (item.dataset.tab === 'users') renderUsers();
         if (item.dataset.tab === 'pos') posInput.focus();
     });
 });
+
+/* --- Users Module --- */
+const renderUsers = () => {
+    const tbody = document.getElementById('users-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    adminUsers.forEach(u => {
+        const row = document.createElement('tr');
+        const isActive = u.status === 'active';
+
+        row.innerHTML = `
+            <td>${u.name}</td>
+            <td>${u.email}</td>
+            <td>${u.role}</td>
+            <td><span style="color: ${isActive ? 'green' : 'red'}; font-weight: bold;">${isActive ? 'Activo' : 'Inactivo'}</span></td>
+            <td>
+                ${isActive
+                ? `<button class="btn-action btn-delete" onclick="toggleUserStatus('${u.docId}', 'inactive')" title="Desactivar"><i class="fa-solid fa-ban"></i></button>`
+                : `<button class="btn-action btn-restore" onclick="toggleUserStatus('${u.docId}', 'active')" title="Activar"><i class="fa-solid fa-check"></i></button>`
+            }
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+};
+
+const btnAddUser = document.getElementById('btn-add-user');
+if (btnAddUser) {
+    btnAddUser.addEventListener('click', async () => {
+        const name = prompt("Nombre del usuario:");
+        if (!name) return;
+        const email = prompt("Email del usuario:");
+        if (!email) return;
+        const password = prompt("Contraseña (min 6 chars):");
+        if (!password || password.length < 6) return alert("Contraseña inválida");
+
+        try {
+            await addDoc(collection(db, 'users'), {
+                name,
+                email,
+                password,
+                role: 'admin',
+                status: 'active'
+            });
+            alert("Usuario creado exitosamente");
+        } catch (e) {
+            alert("Error al crear usuario: " + e.message);
+        }
+    });
+}
+
+window.toggleUserStatus = async (docId, newStatus) => {
+    if (!confirm(`¿Cambiar estado de usuario a ${newStatus}?`)) return;
+    try {
+        await updateDoc(doc(db, 'users', docId), { status: newStatus });
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+};
 
 
 /* --- POS Module --- */

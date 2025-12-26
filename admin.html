@@ -30,6 +30,8 @@
                             Inventario</a></li>
                     <li><a href="#" class="nav-item" data-tab="movements"><i class="fa-solid fa-list-check"></i>
                             Movimientos</a></li>
+                    <li><a href="#" class="nav-item" data-tab="users"><i class="fa-solid fa-users"></i>
+                            Usuarios</a></li>
 
                     <li><a href="index.html" class="nav-item"><i class="fa-solid fa-globe"></i> Ver Tienda</a></li>
                 </ul>
@@ -137,6 +139,34 @@
                             </tr>
                         </thead>
                         <tbody id="inventory-body">
+                            <!-- Rows via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users" class="tab-content">
+                <div class="inventory-header">
+                    <h1>Gestión de Usuarios</h1>
+                    <div class="inv-controls">
+                        <button class="btn-add" id="btn-add-user"><i class="fa-solid fa-user-plus"></i> Nuevo
+                            Usuario</button>
+                    </div>
+                </div>
+
+                <div class="inventory-table-wrapper">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-body">
                             <!-- Rows via JS -->
                         </tbody>
                     </table>
