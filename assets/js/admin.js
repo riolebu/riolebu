@@ -242,11 +242,18 @@ const closeUserModal = document.getElementById('close-user-modal');
 if (btnAddUser && modalAddUser) {
     btnAddUser.addEventListener('click', () => {
         formAddUser.reset();
-        modalAddUser.classList.add('active');
+        modalAddUser.classList.add('open');
     });
 
     closeUserModal.addEventListener('click', () => {
-        modalAddUser.classList.remove('active');
+        modalAddUser.classList.remove('open');
+    });
+
+    // Close on click outside
+    window.addEventListener('click', (e) => {
+        if (e.target === modalAddUser) {
+            modalAddUser.classList.remove('open');
+        }
     });
 
     formAddUser.addEventListener('submit', async (e) => {
@@ -276,7 +283,7 @@ if (btnAddUser && modalAddUser) {
                 status: 'active'
             });
             alert("Usuario creado exitosamente");
-            modalAddUser.classList.remove('active');
+            modalAddUser.classList.remove('open');
         } catch (e) {
             alert("Error al crear usuario: " + e.message);
         }
