@@ -218,8 +218,10 @@ const renderUsers = () => {
             actionButtons = `<button class="btn-action btn-restore" onclick="toggleUserStatus('${u.docId}', 'active')" title="Activar"><i class="fa-solid fa-check"></i></button>`;
         }
 
-        // Only allow password change for the logged-in user
-        if (currentUser && currentUser.email === u.email && isActive) {
+        // Show password change button for ALL active users
+        // If it's the current user, it will ask for old pass.
+        // If it's another user, it will allow reset without old pass.
+        if (isActive) {
             actionButtons += ` <button class="btn-action btn-edit" onclick="changeUserPassword('${u.docId}')" title="Cambiar Contraseña" style="background-color: #FFC107; color: black;"><i class="fa-solid fa-key"></i></button>`;
         }
 
