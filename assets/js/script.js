@@ -171,23 +171,26 @@ const formatPrice = (price) => {
 };
 
 // Render Products
+// Render Products
 window.renderProducts = (category = 'all', searchTerm = '') => {
     if (!productsContainer) return;
 
-    productsContainer.innerHTML = '';
+    // Determine if this is a search operation or a category switch
+    // We only simulate loading for category switches to be smooth
+    const isSearch = searchTerm !== '';
 
-    // Simulating loading state
-    productsContainer.style.opacity = '0.5';
+    if (!isSearch) {
+        productsContainer.innerHTML = '';
+        productsContainer.style.opacity = '0.5';
+    }
 
-    setTimeout(() => {
+    const executeRender = () => {
         let filteredProducts = products;
 
         // Filter by Category
         if (category !== 'all') {
             filteredProducts = filteredProducts.filter(p => p.category === category || (category === 'materiales' && p.category !== 'herramientas' && p.category !== 'aridos' && p.category !== 'jardin'));
         } else if (!searchTerm) {
-            // Only exclude aridos if we are NOT searching. 
-            // If we ARE searching, we want to look everywhere, including aridos.
             filteredProducts = filteredProducts.filter(p => p.category !== 'aridos');
         }
 
@@ -198,6 +201,11 @@ window.renderProducts = (category = 'all', searchTerm = '') => {
                 p.name.toLowerCase().includes(term) ||
                 p.category.toLowerCase().includes(term)
             );
+        }
+
+        // Clean container if it wasn't cleaned (search mode)
+        if (isSearch) {
+            productsContainer.innerHTML = '';
         }
 
         if (filteredProducts.length === 0) {
@@ -247,7 +255,13 @@ window.renderProducts = (category = 'all', searchTerm = '') => {
         });
 
         productsContainer.style.opacity = '1';
-    }, 300); // Small delay for effect
+    };
+
+    if (isSearch) {
+        executeRender();
+    } else {
+        setTimeout(executeRender, 300); // Small delay for effect only on categories
+    }
 };
 
 // Add to Cart Function
@@ -270,21 +284,8 @@ filterButtons.forEach(btn => {
 
 // Search Functionality
 if (searchInput) {
-    searchInput.addEventListener('input', (e) => { // Changed to 'change' or keeping 'input' but handling redirect on Enter? 
-        // 'input' is real-time. Redirecting on input is bad UX for typing.
-    });
-
-    // Better: Handle 'Enter' key or search button click for redirect scenarios, 
-    // but for index page 'input' is nice.
-    // Let's keep 'input' for index page, but if we are on another page, we need to wait for Enter?
-    // Actually, the previous code was doing realtime search on index. 
-
-    // To support "Search from Aridos Page" -> we probably need to listen for "Enter" key or button click.
-    // Realtime search on Aridos page without results is weird.
-
-    // Let's change listener to handle both.
-
-    searchInput.addEventListener('keyup', (e) => {
+    // Real-time search on input
+    searchInput.addEventListener('input', (e) => {
         const term = searchInput.value;
         if (productsContainer) {
             // We are on Index, do realtime
@@ -292,15 +293,21 @@ if (searchInput) {
             if (term.length > 0) {
                 filterButtons.forEach(b => b.classList.remove('active'));
             }
-        } else {
-            // We are on another page. Wait for Enter to redirect.
-            if (e.key === 'Enter') {
+        }
+    });
+
+    // Handle Enter key for redirect if needed (e.g. from other pages)
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const term = searchInput.value;
+            // If we are NOT on index, redirect
+            if (!productsContainer) {
                 window.location.href = `index.html?search=${encodeURIComponent(term)}`;
             }
         }
     });
 
-    // Also handle the search button click if it exists (it's in HTML but no ID)
+    // Search button click
     const searchBtn = searchInput.nextElementSibling; // The button next to input
     if (searchBtn) {
         searchBtn.addEventListener('click', () => {
