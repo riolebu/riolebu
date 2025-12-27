@@ -420,14 +420,22 @@ const renderPosCart = () => {
     let total = 0;
 
     cart.forEach(item => {
+        // Get fresh stock info
+        const liveProduct = products.find(p => p.id === item.id) || item;
+        const currentStock = liveProduct.stock;
         const subtotal = item.price * item.qty;
         total += subtotal;
 
         const row = document.createElement('div');
         row.className = 'ticket-item';
         row.innerHTML = `
-            <h4>${item.name}</h4>
-            <input type="number" class="pos-qty-input" value="${item.qty}" min="1" onchange="updatePosQty(${item.id}, this)">
+            <div style="display: flex; flex-direction: column;">
+                <h4 style="margin: 0;">${item.name}</h4>
+                <small style="color: #666; font-size: 0.75rem;">Stock: ${currentStock}</small>
+            </div>
+            <input type="number" class="pos-qty-input" value="${item.qty}" min="1" max="${currentStock}" 
+                onchange="updatePosQty(${item.id}, this)"
+                oninput="if(parseInt(this.value) > ${currentStock}) { this.value = ${currentStock}; alert('Máximo stock disponible: ${currentStock}'); }">
             <span>${formatPrice(subtotal)}</span>
             <button class="btn-remove-item" onclick="removePosItem(${item.id})"><i class="fa-solid fa-trash"></i></button>
         `;

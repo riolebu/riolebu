@@ -239,6 +239,10 @@ window.renderProducts = (category = 'all', searchTerm = '') => {
                         ${hasDiscount ? `<span class="old-price">${formatPrice(product.oldPrice)}</span>` : ''}
                     </div>
                     
+                    <div class="product-stock" style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">
+                        <span>Stock: ${product.stock} unidades</span>
+                    </div>
+
                     <div class="product-actions">
                         <div class="qty-selector">
                             <button class="qty-btn minus" onclick="adjustCardQty(this, -1)">-</button>
@@ -390,6 +394,11 @@ window.renderAridosProducts = () => {
                         <span class="current-price">${formatPrice(product.price)}</span>
                         ${hasDiscount ? `<span class="old-price">${formatPrice(product.oldPrice)}</span>` : ''}
                     </div>
+
+                    <div class="product-stock" style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">
+                        <span>Stock: ${product.stock} unidades</span>
+                    </div>
+
                     <div class="product-actions">
                         <div class="qty-selector">
                             <button class="qty-btn minus" onclick="adjustCardQty(this, -1)">-</button>
