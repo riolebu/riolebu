@@ -1410,10 +1410,20 @@ const renderMovementsHistory = () => {
         return matchDate && matchProd && matchSeller;
     });
 
+    const movementsTotalAmount = document.getElementById('movements-total-amount');
+    const movementsTotalCount = document.getElementById('movements-total-count');
+
     if (filtered.length === 0) {
         movementsBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">No se encontraron movimientos con los filtros seleccionados.</td></tr>';
+        if (movementsTotalAmount) movementsTotalAmount.textContent = formatPrice(0);
+        if (movementsTotalCount) movementsTotalCount.textContent = '0';
         return;
     }
+
+    // Calculate totals for filtered results
+    const totalVentas = filtered.filter(m => m.type === 'sale').reduce((sum, m) => sum + (m.total || 0), 0);
+    if (movementsTotalAmount) movementsTotalAmount.textContent = formatPrice(totalVentas);
+    if (movementsTotalCount) movementsTotalCount.textContent = filtered.length;
 
     filtered.forEach(m => {
         const row = document.createElement('tr');

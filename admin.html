@@ -218,6 +218,24 @@
                             style="background-color: var(--admin-accent); height: 38px;">
                             <i class="fa-solid fa-file-invoice-dollar"></i> Informe Diario
                         </button>
+                        <button class="btn-add" id="btn-clear-filters" style="background-color: #757575; height: 38px;">
+                            <i class="fa-solid fa-eraser"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Totals Summary -->
+                <div id="movements-summary"
+                    style="display: flex; gap: 20px; background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px;">
+                    <div class="summary-card">
+                        <small style="color: #666; display: block;">Total Filtro</small>
+                        <span id="movements-total-amount"
+                            style="font-size: 1.25rem; font-weight: bold; color: var(--admin-primary);">$0</span>
+                    </div>
+                    <div class="summary-card">
+                        <small style="color: #666; display: block;">Documentos</small>
+                        <span id="movements-total-count"
+                            style="font-size: 1.25rem; font-weight: bold; color: #444;">0</span>
                     </div>
                 </div>
 
