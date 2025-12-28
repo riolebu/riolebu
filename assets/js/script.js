@@ -201,7 +201,9 @@ const renderProducts = (category = 'all', searchTerm = '') => {
         let filteredProducts = products;
 
         // Filter by Category
-        if (category !== 'all') {
+        if (category === 'featured') {
+            filteredProducts = filteredProducts.filter(p => p.featured === true);
+        } else if (category !== 'all') {
             filteredProducts = filteredProducts.filter(p => p.category === category || (category === 'materiales' && p.category !== 'herramientas' && p.category !== 'aridos' && p.category !== 'jardin'));
         } else if (!searchTerm) {
             filteredProducts = filteredProducts.filter(p => p.category !== 'aridos');
@@ -426,7 +428,8 @@ navLinks.forEach(link => {
         else if (text.includes('generadores')) category = 'generadores';
         else if (text.includes('herramientas')) category = 'herramientas';
         else if (text.includes('seguridad')) category = 'seguridad';
-        else if (text.includes('repuestos')) category = 'aridos'; // Mapped to aridos for compatibility with Repuestos/Aridos page logic
+        else if (text.includes('repuestos')) category = 'aridos';
+        else if (text.includes('ofertas del mes')) category = 'featured';
 
         renderProducts(category);
 

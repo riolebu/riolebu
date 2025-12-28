@@ -836,6 +836,9 @@ const renderInventory = () => {
             <td>${formatPrice(p.price)}</td>
             <td style="${p.stock <= 5 ? 'color: var(--admin-danger); font-weight: bold;' : ''}">${p.stock}</td>
             <td>
+                <button class="btn-action" onclick="toggleFeatured(${p.id})" title="Destacar Oferta" style="background-color: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: ${p.featured ? '#FFD700' : '#ccc'}; padding: 0 5px;">
+                    <i class="${p.featured ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+                </button>
                 <button class="btn-action btn-edit" onclick="openImageEditor(${p.id})" title="Editar Imágenes" style="background-color: #2196F3; color: white;"><i class="fa-solid fa-images"></i></button>
                 <button class="btn-action btn-history" onclick="openHistory(${p.id})" title="Ver Historial" style="background-color: #607D8B; color: white;"><i class="fa-solid fa-clock-rotate-left"></i></button>
                 ${isInactive
@@ -846,6 +849,20 @@ const renderInventory = () => {
         `;
         invBody.appendChild(row);
     });
+};
+
+window.toggleFeatured = async (id) => {
+    const product = products.find(p => p.id === id);
+    if (!product || !product.docId) return;
+
+    try {
+        const prodRef = doc(db, 'products', product.docId);
+        await updateDoc(prodRef, {
+            featured: !product.featured
+        });
+    } catch (err) {
+        console.error("Error toggling featured status:", err);
+    }
 };
 
 window.toggleProductStatus = async (id, newStatus) => {
@@ -869,10 +886,28 @@ window.editStock = async (id) => {
     const product = products.find(p => p.id === id);
     if (!product) return;
 
+    const user = getCurrentUser();
+    const isAdmin = user && user.role === 'admin';
+
     const newStock = prompt(`Editar Stock para: ${product.name}\nActual: ${product.stock}`, product.stock);
     if (newStock !== null) {
         const stockInt = parseInt(newStock);
         if (!isNaN(stockInt) && stockInt >= 0) {
+            let updateData = { stock: stockInt };
+
+            // Si es admin, preguntar por el precio
+            if (isAdmin) {
+                const newPrice = prompt(`Editar Precio para: ${product.name}\nActual: ${product.price}`, product.price);
+                if (newPrice !== null) {
+                    const priceInt = parseInt(newPrice);
+                    if (!isNaN(priceInt) && priceInt >= 0) {
+                        updateData.price = priceInt;
+                    } else {
+                        alert('Precio inválido, se mantendrá el actual.');
+                    }
+                }
+            }
+
             const diff = stockInt - product.stock;
             if (diff !== 0) {
                 await recordMovement({
@@ -880,15 +915,16 @@ window.editStock = async (id) => {
                     docType: diff > 0 ? 'INGRESO' : 'AJUSTE',
                     items: [`${Math.abs(diff)}x ${product.name} (${diff > 0 ? 'Aumento' : 'Baja'})`],
                     total: 0,
-                    seller: "Admin (Manual)"
+                    seller: `${user.name || "Admin"} (Manual)`
                 });
             }
+
             if (product.docId) {
                 const prodRef = doc(db, 'products', product.docId);
-                await updateDoc(prodRef, { stock: stockInt });
+                await updateDoc(prodRef, updateData);
             }
         } else {
-            alert('Valor inválido');
+            alert('Stock inválido');
         }
     }
 };
