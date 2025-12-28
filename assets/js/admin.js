@@ -1448,6 +1448,17 @@ const renderMovementsHistory = () => {
         movementsBody.appendChild(row);
     });
 };
+// Clear Filters Logic
+const btnClearFilters = document.getElementById('btn-clear-filters');
+if (btnClearFilters) {
+    btnClearFilters.addEventListener('click', () => {
+        if (movementsFilterDate) movementsFilterDate.value = '';
+        if (movementsFilterProduct) movementsFilterProduct.value = '';
+        if (movementsFilterSeller) movementsFilterSeller.value = '';
+        if (movementsFilterType) movementsFilterType.value = '';
+        renderMovementsHistory();
+    });
+}
 
 if (btnDailyReport) {
     btnDailyReport.addEventListener('click', () => {
