@@ -567,7 +567,27 @@ posCheckoutBtn.addEventListener('click', () => {
         }
     });
 
-    // Local Storage fallback removed
+    // --- Save Client Data ---
+    const cliRut = document.getElementById('cli-rut').value.trim();
+    const cliName = document.getElementById('cli-name').value.trim();
+    const cliGiro = document.getElementById('cli-giro').value.trim();
+    const cliAddress = document.getElementById('cli-address').value.trim();
+
+    if (cliRut) {
+        try {
+            // Save or Update Client
+            // Use RUT as ID for easy lookup
+            await setDoc(doc(db, 'clients', cliRut), {
+                rut: cliRut,
+                name: cliName,
+                giro: cliGiro,
+                address: cliAddress,
+                lastPurchase: new Date().toISOString()
+            });
+        } catch (e) {
+            console.error("Error guardando cliente:", e);
+        }
+    }
 
     // Simulate SII API Service Call
     console.log("Enviando datos al SII...");
@@ -597,11 +617,8 @@ window.setDocType = (type) => {
     });
 
     const invForm = document.getElementById('invoice-form');
-    if (type === 'factura') {
-        invForm.style.display = 'block';
-    } else {
-        invForm.style.display = 'none';
-    }
+    // Always visible now
+    invForm.style.display = 'block';
 };
 
 window.formatRut = (input) => {
@@ -610,6 +627,27 @@ window.formatRut = (input) => {
         const body = rut.slice(0, -1);
         const dv = rut.slice(-1).toUpperCase();
         input.value = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + '-' + dv;
+    }
+};
+
+window.searchClientByRut = async (rut) => {
+    if (!rut || rut.length < 8) return;
+    try {
+        const clientRef = doc(db, 'clients', rut);
+        const docSnap = await getDoc(clientRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            document.getElementById('cli-name').value = data.name || '';
+            document.getElementById('cli-giro').value = data.giro || '';
+            document.getElementById('cli-address').value = data.address || '';
+            // Optional: Visual feedback
+            const nameInput = document.getElementById('cli-name');
+            nameInput.style.backgroundColor = "#e8f5e9";
+            setTimeout(() => nameInput.style.backgroundColor = "", 1000);
+        }
+    } catch (e) {
+        console.error("Error buscando cliente:", e);
     }
 };
 

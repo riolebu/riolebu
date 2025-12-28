@@ -86,20 +86,20 @@
                     <div class="pos-sidebar">
 
                         <!-- Document Settings (Legacy - Replaced by Voucher) -->
-                        <div class="doc-settings" style="display: none;">
-                            <label class="doc-label">Tipo de Documento</label>
+                        <div class="doc-settings">
+                            <label class="doc-label">Documento y Cliente</label>
                             <div class="doc-toggle">
                                 <button class="doc-btn active" onclick="setDocType('boleta')">Boleta</button>
                                 <button class="doc-btn" onclick="setDocType('factura')">Factura</button>
                             </div>
 
-                            <!-- Invoice Details Form (Hidden by default) -->
-                            <div id="invoice-form" class="invoice-details" style="display: none;">
-                                <input type="text" id="cli-rut" placeholder="R.U.T (ej: 76.123.456-7)"
-                                    oninput="formatRut(this)">
-                                <input type="text" id="cli-name" placeholder="Razón Social">
-                                <input type="text" id="cli-giro" placeholder="Giro">
-                                <input type="text" id="cli-address" placeholder="Dirección">
+                            <!-- Invoice Details Form (Always visible to allow capturing client data) -->
+                            <div id="invoice-form" class="invoice-details">
+                                <input type="text" id="cli-rut" placeholder="R.U.T (ej: 12345678-9)"
+                                    oninput="formatRut(this)" onblur="searchClientByRut(this.value)">
+                                <input type="text" id="cli-name" placeholder="Nombre / Razón Social">
+                                <input type="text" id="cli-giro" placeholder="Giro (Opcional)">
+                                <input type="text" id="cli-address" placeholder="Dirección (Opcional)">
                             </div>
                         </div>
 
