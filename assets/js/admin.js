@@ -115,7 +115,8 @@ onSnapshot(usersRef, async (snapshot) => {
     logDebug("Select actualizado.");
 
 }, (error) => {
-    logDebug(`ERROR CRÍTICO: ${error.message} (${error.code})`);
+    const msg = `ERROR CRÍTICO: No se puede conectar con la base de datos.\n${error.message}\n\nPor favor, verifica tu conexión o las reglas de Firebase.`;
+    alert(msg);
     console.error("Error listening to users:", error);
 });
 
