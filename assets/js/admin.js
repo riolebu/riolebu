@@ -740,7 +740,7 @@ const generateDTE = async () => {
         vendorRow.className = 'vendor-row';
         vendorRow.style.marginTop = '10px';
         vendorRow.style.fontSize = '0.75rem';
-        vendorRow.style.textAlign = 'center';
+        vendorRow.style.textAlign = 'right';
         vendorRow.style.borderTop = '1px dashed #ccc';
         vendorRow.style.paddingTop = '5px';
         vendorRow.innerHTML = `<strong>VENDEDOR:</strong> ${(getCurrentUser().name || '---').toUpperCase()}`;
