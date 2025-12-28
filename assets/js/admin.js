@@ -149,6 +149,13 @@ const checkAuth = () => {
     if (isAuth) {
         loginModal.classList.remove('open');
         posInput.focus();
+
+        // Actualizar nombre de usuario en el sidebar
+        const currentUser = getCurrentUser();
+        const nameDisplay = document.getElementById('current-user-name-display');
+        if (nameDisplay && currentUser.name) {
+            nameDisplay.textContent = currentUser.name;
+        }
     } else {
         loginModal.classList.add('open');
     }
