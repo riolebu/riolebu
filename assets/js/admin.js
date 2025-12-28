@@ -480,7 +480,7 @@ posInput.addEventListener('keydown', (e) => {
 
 posInput.addEventListener('input', (e) => {
     const val = e.target.value.toLowerCase().trim();
-    if (val.length < 2) {
+    if (val.length < 1) {
         posSearchResults.classList.remove('active');
         return;
     }
