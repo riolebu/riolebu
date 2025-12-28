@@ -544,7 +544,7 @@ document.addEventListener('click', (e) => {
 });
 
 // Checkout
-posCheckoutBtn.addEventListener('click', () => {
+posCheckoutBtn.addEventListener('click', async () => {
     if (cart.length === 0) return alert('Por favor, agregue productos al carro.');
 
     // Validate Invoice Data if selected
