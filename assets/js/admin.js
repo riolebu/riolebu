@@ -727,6 +727,16 @@ const generateDTE = async () => {
         dteItemsDiv.appendChild(row);
     });
 
+    // Añadir Vendedor al final
+    const vendorRow = document.createElement('div');
+    vendorRow.style.marginTop = '15px';
+    vendorRow.style.fontSize = '0.75rem';
+    vendorRow.style.textAlign = 'left';
+    vendorRow.style.borderTop = '1px dashed #ccc';
+    vendorRow.style.paddingTop = '5px';
+    vendorRow.innerHTML = `<strong>VENDEDOR:</strong> ${(getCurrentUser().name || '---').toUpperCase()}`;
+    dteItemsDiv.appendChild(vendorRow);
+
     // Show the visual receipt
     dteModal.classList.add('open');
 
