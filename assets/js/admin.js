@@ -150,11 +150,14 @@ const checkAuth = () => {
         loginModal.classList.remove('open');
         posInput.focus();
 
-        // Actualizar nombre de usuario en el sidebar
+        // Actualizar nombre de usuario en el sidebar e implementar restricciones de rol
         const currentUser = getCurrentUser();
-        const nameDisplay = document.getElementById('current-user-name-display');
-        if (nameDisplay && currentUser.name) {
-            nameDisplay.textContent = currentUser.name;
+        if (currentUser) {
+            hideMenusByRole(currentUser);
+            const nameDisplay = document.getElementById('current-user-name-display');
+            if (nameDisplay && currentUser.name) {
+                nameDisplay.textContent = currentUser.name;
+            }
         }
     } else {
         loginModal.classList.add('open');
