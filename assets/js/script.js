@@ -430,6 +430,15 @@ navLinks.forEach(link => {
 
         renderProducts(category);
 
+        // Synchronize filter buttons active state
+        filterButtons.forEach(btn => {
+            if (btn.dataset.filter === category) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
         // Scroll to products
         const productsSection = document.getElementById('productos');
         productsSection.scrollIntoView({ behavior: 'smooth' });
