@@ -57,8 +57,14 @@ onSnapshot(movementsQuery, (snapshot) => {
         docId: doc.id,
         ...doc.data()
     }));
+    // Ensure UI updates if we are on the movements tab
     if (itemActiveTab === 'movements') renderMovementsHistory();
     populateSellerFilter();
+
+    // Proactively call render once to avoid "no records" message if page is already open
+    if (movementsHistory.length > 0 && movementsBody && movementsBody.innerHTML.includes('No se encontraron')) {
+        renderMovementsHistory();
+    }
 });
 
 // Settings Listener (Folio)
@@ -230,25 +236,59 @@ const hideMenusByRole = (user) => {
 // Tab Switching
 navItems.forEach(item => {
     item.addEventListener('click', (e) => {
-        if (!item.dataset.tab) return;
+        const tabId = item.dataset.tab;
+        if (!tabId) return;
         e.preventDefault();
 
-        itemActiveTab = item.dataset.tab;
+        itemActiveTab = tabId;
 
         // UI
         navItems.forEach(n => n.classList.remove('active'));
         item.classList.add('active');
 
         tabContents.forEach(t => t.classList.remove('active'));
-        document.getElementById(item.dataset.tab).classList.add('active');
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) targetTab.classList.add('active');
+
+        // Global Reset: Clear all filters when switching tabs
+        resetAllTabFilters();
 
         // Logic
-        if (item.dataset.tab === 'inventory') renderInventory();
-        if (item.dataset.tab === 'movements') renderMovementsHistory();
-        if (item.dataset.tab === 'users') renderUsers();
-        if (item.dataset.tab === 'pos') posInput.focus();
+        if (tabId === 'inventory') renderInventory();
+        if (tabId === 'movements') renderMovementsHistory();
+        if (tabId === 'users') renderUsers();
+        if (tabId === 'pos') {
+            if (posInput) posInput.focus();
+        }
     });
 });
+
+const resetAllTabFilters = () => {
+    // 1. Reset Inventory Filters
+    const invSearchObj = document.getElementById('inv-search');
+    const invFilterObj = document.getElementById('inv-filter');
+    if (invSearchObj) invSearchObj.value = '';
+    if (invFilterObj) invFilterObj.value = 'all';
+
+    // 2. Reset Movements Filters
+    const fDate = document.getElementById('movements-filter-date');
+    const fProd = document.getElementById('movements-filter-product');
+    const fSeller = document.getElementById('movements-filter-seller');
+    const fType = document.getElementById('movements-filter-type');
+
+    if (fDate) fDate.value = '';
+    if (fProd) fProd.value = '';
+    if (fType) fType.value = '';
+
+    // Only reset seller if user is admin, otherwise it must stay locked to their name
+    const currentUser = getCurrentUser();
+    if (currentUser.role === 'admin') {
+        if (fSeller) fSeller.value = '';
+    } else {
+        // For non-admins, ensure their identity is preserved
+        if (typeof populateSellerFilter === 'function') populateSellerFilter();
+    }
+};
 
 /* --- Users Module --- */
 const renderUsers = () => {
@@ -1475,28 +1515,38 @@ const renderMovementsHistory = () => {
 
     const filtered = movementsHistory.filter(m => {
         // Role based restriction: Non-admins ONLY see their own movements
+        // Admin always sees everything by default
         if (!isAdmin && m.seller !== currentUser.name) {
             return false;
         }
 
         // Date Filter (Compare YYYY-MM-DD)
-        // m.date is localized string like "27/12/2025, 23:00:00". We need to handle this carefully.
-        // Option: convert m.id (timestamp) to YYYY-MM-DD
         let matchDate = true;
         if (dateVal) {
-            // Assuming m.id is a timestamp as set in recordMovement (Date.now())
-            // If m.id is not trustworthy, we parse m.date string
-            const entryDate = new Date(m.id);
-            // Format entryDate to YYYY-MM-DD in local time
-            const year = entryDate.getFullYear();
-            const month = String(entryDate.getMonth() + 1).padStart(2, '0');
-            const day = String(entryDate.getDate()).padStart(2, '0');
-            const entryIso = `${year}-${month}-${day}`;
+            // Robust date parsing
+            let entryDate;
+            if (m.id && typeof m.id === 'number') {
+                entryDate = new Date(m.id);
+            } else if (m.date) {
+                // Try parsing the date string "27/12/2025, 23:00:00" -> 2025-12-27
+                const parts = m.date.split(',')[0].split('/');
+                if (parts.length === 3) {
+                    entryDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                } else {
+                    entryDate = new Date(m.date);
+                }
+            }
 
-            matchDate = entryIso === dateVal;
+            if (entryDate && !isNaN(entryDate.getTime())) {
+                const year = entryDate.getFullYear();
+                const month = String(entryDate.getMonth() + 1).padStart(2, '0');
+                const day = String(entryDate.getDate()).padStart(2, '0');
+                const entryIso = `${year}-${month}-${day}`;
+                matchDate = entryIso === dateVal;
+            }
         }
 
-        // Product Filter
+        // Product Filter (Case insensitive loose match)
         let matchProd = true;
         if (prodVal) {
             matchProd = m.items.some(i => i.toLowerCase().includes(prodVal));
@@ -1551,10 +1601,7 @@ const renderMovementsHistory = () => {
 const btnClearFilters = document.getElementById('btn-clear-filters');
 if (btnClearFilters) {
     btnClearFilters.addEventListener('click', () => {
-        if (movementsFilterDate) movementsFilterDate.value = '';
-        if (movementsFilterProduct) movementsFilterProduct.value = '';
-        if (movementsFilterSeller) movementsFilterSeller.value = '';
-        if (movementsFilterType) movementsFilterType.value = '';
+        resetAllTabFilters();
         renderMovementsHistory();
     });
 }
