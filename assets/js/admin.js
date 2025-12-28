@@ -727,47 +727,47 @@ const generateDTE = async () => {
         dteItemsDiv.appendChild(row);
     });
 
-});
 
-// Añadir Vendedor después del Total
-const dteTotalsDiv = document.querySelector('.dte-totals');
-if (dteTotalsDiv) {
-    // Remover si ya existe (para evitar duplicados en re-emisiones si fuera el caso)
-    const oldVendor = dteTotalsDiv.querySelector('.vendor-row');
-    if (oldVendor) oldVendor.remove();
 
-    const vendorRow = document.createElement('div');
-    vendorRow.className = 'vendor-row';
-    vendorRow.style.marginTop = '10px';
-    vendorRow.style.fontSize = '0.75rem';
-    vendorRow.style.textAlign = 'center';
-    vendorRow.style.borderTop = '1px dashed #ccc';
-    vendorRow.style.paddingTop = '5px';
-    vendorRow.innerHTML = `<strong>VENDEDOR:</strong> ${(getCurrentUser().name || '---').toUpperCase()}`;
-    dteTotalsDiv.appendChild(vendorRow);
-}
+    // Añadir Vendedor después del Total
+    const dteTotalsDiv = document.querySelector('.dte-totals');
+    if (dteTotalsDiv) {
+        // Remover si ya existe (para evitar duplicados en re-emisiones si fuera el caso)
+        const oldVendor = dteTotalsDiv.querySelector('.vendor-row');
+        if (oldVendor) oldVendor.remove();
 
-// Show the visual receipt
-dteModal.classList.add('open');
+        const vendorRow = document.createElement('div');
+        vendorRow.className = 'vendor-row';
+        vendorRow.style.marginTop = '10px';
+        vendorRow.style.fontSize = '0.75rem';
+        vendorRow.style.textAlign = 'center';
+        vendorRow.style.borderTop = '1px dashed #ccc';
+        vendorRow.style.paddingTop = '5px';
+        vendorRow.innerHTML = `<strong>VENDEDOR:</strong> ${(getCurrentUser().name || '---').toUpperCase()}`;
+        dteTotalsDiv.appendChild(vendorRow);
+    }
 
-// Record into History
-await recordMovement({
-    type: 'sale',
-    docType: 'VOUCHER',
-    folio: dteNumber,
-    items: cart.map(i => `${i.qty}x ${i.name}`),
-    total: total,
-    seller: getCurrentUser().name || "Admin"
-});
+    // Show the visual receipt
+    dteModal.classList.add('open');
 
-// Increment Folio in Firestore
-try {
-    await updateDoc(doc(db, 'settings', 'pos_config'), {
-        currentFolio: Number(dteNumber) + 1
+    // Record into History
+    await recordMovement({
+        type: 'sale',
+        docType: 'VOUCHER',
+        folio: dteNumber,
+        items: cart.map(i => `${i.qty}x ${i.name}`),
+        total: total,
+        seller: getCurrentUser().name || "Admin"
     });
-} catch (e) {
-    console.error("Error incrementing folio:", e);
-}
+
+    // Increment Folio in Firestore
+    try {
+        await updateDoc(doc(db, 'settings', 'pos_config'), {
+            currentFolio: Number(dteNumber) + 1
+        });
+    } catch (e) {
+        console.error("Error incrementing folio:", e);
+    }
 };
 
 const getCurrentUser = () => {
