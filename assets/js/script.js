@@ -233,12 +233,15 @@ const renderProducts = (category = 'all', searchTerm = '') => {
                 ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
                 : 0;
 
+            const isPlaceholder = product.image === 'assets/images/products/generador.jpg';
+
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
                 <div class="product-image">
                     ${hasDiscount ? `<span class="discount-badge">-${discountPercentage}%</span>` : ''}
                     <img src="${product.image}" alt="${product.name}" id="img-prod-${product.id}" data-img-index="0">
+                    ${isPlaceholder ? '<div class="no-image-overlay">Sin Imagen</div>' : ''}
                     ${(product.images && product.images.length > 1) ? `
                         <button class="img-nav prev" onclick="changeCardImage(${product.id}, -1, event)" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 0 4px 4px 0;"><i class="fa-solid fa-chevron-left"></i></button>
                         <button class="img-nav next" onclick="changeCardImage(${product.id}, 1, event)" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px 0 0 4px;"><i class="fa-solid fa-chevron-right"></i></button>
@@ -460,6 +463,7 @@ const renderAridosProducts = () => {
                 <div class="product-image">
                     ${hasDiscount ? `<span class="discount-badge">-${discountPercentage}%</span>` : ''}
                     <img src="${product.image}" alt="${product.name}">
+                    ${product.image === 'assets/images/products/generador.jpg' ? '<div class="no-image-overlay">Sin Imagen</div>' : ''}
                 </div>
                 <div class="product-info">
                     <span class="product-cat">${product.category}</span>
