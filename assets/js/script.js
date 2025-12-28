@@ -448,6 +448,71 @@ navLinks.forEach(link => {
     });
 });
 
+// PDF Catalog Download
+const downloadCatalogBtn = document.getElementById('btn-download-catalog');
+if (downloadCatalogBtn) {
+    downloadCatalogBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        downloadCatalogPDF();
+    });
+}
+
+function downloadCatalogPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(22);
+    doc.setTextColor(243, 112, 33); // #f37021
+    doc.text('CATÁLOGO DE PRODUCTOS', 105, 20, { align: 'center' });
+
+    doc.setFontSize(14);
+    doc.setTextColor(10, 25, 47); // #0a192f
+    doc.text('RIO LEBU - MAQUINARIA & MOTORES', 105, 30, { align: 'center' });
+
+    // Date
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    const date = new Date().toLocaleDateString();
+    doc.text(`Fecha de emisión: ${date}`, 105, 38, { align: 'center' });
+
+    // Table Data
+    const tableData = products.map(p => [
+        p.id,
+        p.name,
+        p.category.toUpperCase(),
+        p.stock,
+        new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(p.price)
+    ]);
+
+    // Create Table
+    doc.autoTable({
+        startY: 45,
+        head: [['ID', 'Nombre del Producto', 'Categoría', 'Stock', 'Precio']],
+        body: tableData,
+        headStyles: {
+            fillColor: [10, 25, 47],
+            textColor: [255, 255, 255],
+            fontSize: 10,
+            halign: 'center'
+        },
+        styles: {
+            fontSize: 9,
+            cellPadding: 3
+        },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 15 },
+            2: { halign: 'center' },
+            3: { halign: 'center' },
+            4: { halign: 'right' }
+        },
+        margin: { top: 45 }
+    });
+
+    // Save
+    doc.save(`Catalogo_RioLebu_${date.replace(/\//g, '-')}.pdf`);
+}
+
 // Render Áridos Products (for the dedicated section)
 const renderAridosProducts = () => {
     window.renderAridosProducts = renderAridosProducts;
