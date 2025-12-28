@@ -214,6 +214,17 @@
                             </select>
                         </div>
 
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <label for="movements-filter-type"
+                                style="font-size: 0.85rem; color: #666; font-weight: 500;">Tipo Movimiento</label>
+                            <select id="movements-filter-type"
+                                style="width: 150px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Todos</option>
+                                <option value="sale">Solo Ventas</option>
+                                <option value="entry">Solo Inventario</option>
+                            </select>
+                        </div>
+
                         <button class="btn-add" id="btn-daily-report"
                             style="background-color: var(--admin-accent); height: 38px;">
                             <i class="fa-solid fa-file-invoice-dollar"></i> Informe Diario

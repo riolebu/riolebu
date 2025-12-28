@@ -1330,10 +1330,11 @@ const btnDailyReport = document.getElementById('btn-daily-report');
 const movementsFilterDate = document.getElementById('movements-filter-date');
 const movementsFilterProduct = document.getElementById('movements-filter-product');
 const movementsFilterSeller = document.getElementById('movements-filter-seller');
+const movementsFilterType = document.getElementById('movements-filter-type');
 const productSuggestions = document.getElementById('product-suggestions');
 
 // Add listeners for filters
-[movementsFilterDate, movementsFilterProduct, movementsFilterSeller].forEach(el => {
+[movementsFilterDate, movementsFilterProduct, movementsFilterSeller, movementsFilterType].forEach(el => {
     if (el) el.addEventListener('input', () => renderMovementsHistory());
 });
 
@@ -1376,6 +1377,7 @@ const renderMovementsHistory = () => {
     const dateVal = movementsFilterDate ? movementsFilterDate.value : '';
     const prodVal = movementsFilterProduct ? movementsFilterProduct.value.toLowerCase() : '';
     const sellerVal = movementsFilterSeller ? movementsFilterSeller.value : '';
+    const typeVal = movementsFilterType ? movementsFilterType.value : '';
 
     const filtered = movementsHistory.filter(m => {
         // Date Filter (Compare YYYY-MM-DD)
@@ -1407,7 +1409,13 @@ const renderMovementsHistory = () => {
             matchSeller = m.seller === sellerVal;
         }
 
-        return matchDate && matchProd && matchSeller;
+        // Type Filter
+        let matchType = true;
+        if (typeVal) {
+            matchType = m.type === typeVal;
+        }
+
+        return matchDate && matchProd && matchSeller && matchType;
     });
 
     const movementsTotalAmount = document.getElementById('movements-total-amount');
