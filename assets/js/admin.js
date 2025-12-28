@@ -727,37 +727,47 @@ const generateDTE = async () => {
         dteItemsDiv.appendChild(row);
     });
 
-    // Añadir Vendedor al final
+});
+
+// Añadir Vendedor después del Total
+const dteTotalsDiv = document.querySelector('.dte-totals');
+if (dteTotalsDiv) {
+    // Remover si ya existe (para evitar duplicados en re-emisiones si fuera el caso)
+    const oldVendor = dteTotalsDiv.querySelector('.vendor-row');
+    if (oldVendor) oldVendor.remove();
+
     const vendorRow = document.createElement('div');
-    vendorRow.style.marginTop = '15px';
+    vendorRow.className = 'vendor-row';
+    vendorRow.style.marginTop = '10px';
     vendorRow.style.fontSize = '0.75rem';
-    vendorRow.style.textAlign = 'left';
+    vendorRow.style.textAlign = 'center';
     vendorRow.style.borderTop = '1px dashed #ccc';
     vendorRow.style.paddingTop = '5px';
     vendorRow.innerHTML = `<strong>VENDEDOR:</strong> ${(getCurrentUser().name || '---').toUpperCase()}`;
-    dteItemsDiv.appendChild(vendorRow);
+    dteTotalsDiv.appendChild(vendorRow);
+}
 
-    // Show the visual receipt
-    dteModal.classList.add('open');
+// Show the visual receipt
+dteModal.classList.add('open');
 
-    // Record into History
-    await recordMovement({
-        type: 'sale',
-        docType: 'VOUCHER',
-        folio: dteNumber,
-        items: cart.map(i => `${i.qty}x ${i.name}`),
-        total: total,
-        seller: getCurrentUser().name || "Admin"
+// Record into History
+await recordMovement({
+    type: 'sale',
+    docType: 'VOUCHER',
+    folio: dteNumber,
+    items: cart.map(i => `${i.qty}x ${i.name}`),
+    total: total,
+    seller: getCurrentUser().name || "Admin"
+});
+
+// Increment Folio in Firestore
+try {
+    await updateDoc(doc(db, 'settings', 'pos_config'), {
+        currentFolio: Number(dteNumber) + 1
     });
-
-    // Increment Folio in Firestore
-    try {
-        await updateDoc(doc(db, 'settings', 'pos_config'), {
-            currentFolio: Number(dteNumber) + 1
-        });
-    } catch (e) {
-        console.error("Error incrementing folio:", e);
-    }
+} catch (e) {
+    console.error("Error incrementing folio:", e);
+}
 };
 
 const getCurrentUser = () => {
