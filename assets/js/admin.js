@@ -1,5 +1,4 @@
 import { db, storage } from './firebase-config.js';
-import { db, storage } from './firebase-config.js';
 import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 // Firebase Storage no es necesario - imágenes guardadas como base64 en Firestore
 
@@ -90,22 +89,24 @@ onSnapshot(usersRef, async (snapshot) => {
 
     logDebug(`Usuarios procesados: ${adminUsers.length}`);
 
-    // Auto-initialize if empty
-    if (adminUsers.length === 0) {
-        logDebug("Lista vacía. Intentando auto-crear admin...");
-        // ... (rest of logic) ...
+    // Ensure Master Admin exists
+    const masterEmail = 'admin@mariomari.cl';
+    const masterUser = adminUsers.find(u => u.email === masterEmail);
+
+    if (!masterUser) {
+        logDebug("Master Admin no encontrado. Creando...");
         const masterAdmin = {
             name: 'Administrador Master',
-            email: 'admin@mariomari.cl',
+            email: masterEmail,
             password: 'admin',
             role: 'admin',
             status: 'active'
         };
         try {
             await addDoc(usersRef, masterAdmin);
-            logDebug("Auto-creación enviada.");
+            logDebug("Master Admin creado exitosamente.");
         } catch (err) {
-            logDebug(`ERROR al crear: ${err.message}`);
+            logDebug(`ERROR al crear Master Admin: ${err.message}`);
             console.error("Error auto-initializing admin:", err);
         }
     }
