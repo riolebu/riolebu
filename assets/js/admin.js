@@ -677,9 +677,25 @@ const generateDTE = async () => {
         <p>FECHA: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
     `;
 
-    // Client Info Section (Always hidden for Voucher unless requested otherwise)
+    // --- Client Info Section ---
+    const cliRut = document.getElementById('cli-rut').value.trim();
+    const cliName = document.getElementById('cli-name').value.trim();
+    const cliGiro = document.getElementById('cli-giro').value.trim();
+    const cliAddress = document.getElementById('cli-address').value.trim();
+
     const clientInfoDiv = document.getElementById('dte-client-info');
-    clientInfoDiv.style.display = 'none';
+
+    if (cliName || cliRut) {
+        clientInfoDiv.style.display = 'block';
+        clientInfoDiv.innerHTML = `
+            <p><strong>CLIENTE:</strong> ${cliName || '---'}</p>
+            <p><strong>R.U.T:</strong> ${cliRut || '---'}</p>
+            ${cliGiro ? `<p><strong>GIRO:</strong> ${cliGiro}</p>` : ''}
+            ${cliAddress ? `<p><strong>DIRECCIÓN:</strong> ${cliAddress}</p>` : ''}
+        `;
+    } else {
+        clientInfoDiv.style.display = 'none';
+    }
 
     // Detail Rows
     const dteItemsDiv = document.getElementById('dte-items');
