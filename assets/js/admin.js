@@ -45,6 +45,9 @@ onSnapshot(productsRef, (snapshot) => {
         ...doc.data()
     }));
     if (itemActiveTab === 'inventory') renderInventory();
+
+    // Update autocomplete list for movements filter
+    if (typeof updateProductSuggestions === 'function') updateProductSuggestions();
 });
 
 const movementsRef = collection(db, 'movements');
@@ -1327,18 +1330,36 @@ const btnDailyReport = document.getElementById('btn-daily-report');
 const movementsFilterDate = document.getElementById('movements-filter-date');
 const movementsFilterProduct = document.getElementById('movements-filter-product');
 const movementsFilterSeller = document.getElementById('movements-filter-seller');
+const productSuggestions = document.getElementById('product-suggestions');
 
 // Add listeners for filters
 [movementsFilterDate, movementsFilterProduct, movementsFilterSeller].forEach(el => {
     if (el) el.addEventListener('input', () => renderMovementsHistory());
 });
 
-const populateSellerFilter = () => {
+// Populate Product Autocomplete
+function updateProductSuggestions() {
+    if (!productSuggestions) return;
+    productSuggestions.innerHTML = '';
+
+    // Sort products by name
+    const sortedProds = [...products].sort((a, b) => a.name.localeCompare(b.name));
+
+    sortedProds.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.name; // User sees name
+        productSuggestions.appendChild(opt);
+    });
+}
+// Update suggestions whenever products change (e.g. initial load)
+// We'll call this in the products onSnapshot or init
+
+function populateSellerFilter() {
     if (!movementsFilterSeller) return;
     const currentVal = movementsFilterSeller.value;
     const sellers = [...new Set(movementsHistory.map(m => m.seller))].filter(Boolean).sort();
 
-    movementsFilterSeller.innerHTML = '<option value="">Todos los vendedores</option>';
+    movementsFilterSeller.innerHTML = '<option value="">Todos</option>';
     sellers.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s;
@@ -1346,7 +1367,7 @@ const populateSellerFilter = () => {
         movementsFilterSeller.appendChild(opt);
     });
     movementsFilterSeller.value = currentVal;
-};
+}
 
 const renderMovementsHistory = () => {
     movementsBody.innerHTML = '';
