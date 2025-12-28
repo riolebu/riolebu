@@ -186,7 +186,13 @@
             <section id="movements" class="tab-content">
                 <div class="inventory-header">
                     <h1>Movimientos de Venta</h1>
-                    <div class="inv-controls">
+                    <div class="inv-controls" style="flex-wrap: wrap; gap: 10px;">
+                        <input type="date" id="movements-filter-date" title="Filtrar por fecha">
+                        <input type="text" id="movements-filter-product" placeholder="Buscar producto..."
+                            style="width: 200px;">
+                        <select id="movements-filter-seller" style="width: 180px;">
+                            <option value="">Todos los vendedores</option>
+                        </select>
                         <button class="btn-add" id="btn-daily-report" style="background-color: var(--admin-accent);">
                             <i class="fa-solid fa-file-invoice-dollar"></i> Informe Diario
                         </button>

@@ -55,6 +55,7 @@ onSnapshot(movementsQuery, (snapshot) => {
         ...doc.data()
     }));
     if (itemActiveTab === 'movements') renderMovementsHistory();
+    populateSellerFilter();
 });
 
 // Settings Listener (Folio)
@@ -1323,17 +1324,84 @@ const extractQty = (str) => {
 const movementsBody = document.getElementById('movements-body');
 const btnDailyReport = document.getElementById('btn-daily-report');
 
+const movementsFilterDate = document.getElementById('movements-filter-date');
+const movementsFilterProduct = document.getElementById('movements-filter-product');
+const movementsFilterSeller = document.getElementById('movements-filter-seller');
+
+// Add listeners for filters
+[movementsFilterDate, movementsFilterProduct, movementsFilterSeller].forEach(el => {
+    if (el) el.addEventListener('input', () => renderMovementsHistory());
+});
+
+const populateSellerFilter = () => {
+    if (!movementsFilterSeller) return;
+    const currentVal = movementsFilterSeller.value;
+    const sellers = [...new Set(movementsHistory.map(m => m.seller))].filter(Boolean).sort();
+
+    movementsFilterSeller.innerHTML = '<option value="">Todos los vendedores</option>';
+    sellers.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        movementsFilterSeller.appendChild(opt);
+    });
+    movementsFilterSeller.value = currentVal;
+};
+
 const renderMovementsHistory = () => {
     movementsBody.innerHTML = '';
 
-    movementsHistory.forEach(m => {
+    // Get filter values
+    const dateVal = movementsFilterDate ? movementsFilterDate.value : '';
+    const prodVal = movementsFilterProduct ? movementsFilterProduct.value.toLowerCase() : '';
+    const sellerVal = movementsFilterSeller ? movementsFilterSeller.value : '';
+
+    const filtered = movementsHistory.filter(m => {
+        // Date Filter (Compare YYYY-MM-DD)
+        // m.date is localized string like "27/12/2025, 23:00:00". We need to handle this carefully.
+        // Option: convert m.id (timestamp) to YYYY-MM-DD
+        let matchDate = true;
+        if (dateVal) {
+            // Assuming m.id is a timestamp as set in recordMovement (Date.now())
+            // If m.id is not trustworthy, we parse m.date string
+            const entryDate = new Date(m.id);
+            // Format entryDate to YYYY-MM-DD in local time
+            const year = entryDate.getFullYear();
+            const month = String(entryDate.getMonth() + 1).padStart(2, '0');
+            const day = String(entryDate.getDate()).padStart(2, '0');
+            const entryIso = `${year}-${month}-${day}`;
+
+            matchDate = entryIso === dateVal;
+        }
+
+        // Product Filter
+        let matchProd = true;
+        if (prodVal) {
+            matchProd = m.items.some(i => i.toLowerCase().includes(prodVal));
+        }
+
+        // Seller Filter
+        let matchSeller = true;
+        if (sellerVal) {
+            matchSeller = m.seller === sellerVal;
+        }
+
+        return matchDate && matchProd && matchSeller;
+    });
+
+    if (filtered.length === 0) {
+        movementsBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">No se encontraron movimientos con los filtros seleccionados.</td></tr>';
+        return;
+    }
+
+    filtered.forEach(m => {
         const row = document.createElement('tr');
         const badgeClass = m.type === 'entry' ? 'ingreso' : m.docType;
 
         row.innerHTML = `
             <td>${m.date}</td>
             <td>${m.folio}</td>
-            <td><span class="badge ${badgeClass}">${m.docType.toUpperCase()}</span></td>
+            <td><span class="badge ${badgeClass}">${m.docType ? m.docType.toUpperCase() : '---'}</span></td>
             <td><small>${m.items.join(', ').substring(0, 50)}${m.items.join(', ').length > 50 ? '...' : ''}</small></td>
             <td><strong class="${m.type === 'sale' ? 'text-success' : 'text-neutral'}">${m.total > 0 ? formatPrice(m.total) : '---'}</strong></td>
             <td>${m.seller}</td>
