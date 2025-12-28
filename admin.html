@@ -49,7 +49,17 @@
             <!-- POS Section -->
             <section id="pos" class="tab-content active">
                 <div class="pos-header">
-                    <h1>Punto de Venta</h1>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <h1>Punto de Venta</h1>
+                        <div class="folio-control" id="folio-display-container"
+                            style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 0.9rem; opacity: 0.8;">Folio Actual:</span>
+                            <span id="current-folio-display" style="font-size: 1.2rem; font-weight: bold;">---</span>
+                            <button id="btn-edit-folio"
+                                style="background: none; border: none; color: white; cursor: pointer; display: none;"><i
+                                    class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
                     <div class="scanner-container">
                         <i class="fa-solid fa-barcode"></i>
                         <input type="text" id="barcode-input" placeholder="Escanear Código o ID de producto..."
@@ -75,8 +85,8 @@
                     <!-- Totals & Actions -->
                     <div class="pos-sidebar">
 
-                        <!-- Document Settings -->
-                        <div class="doc-settings">
+                        <!-- Document Settings (Legacy - Replaced by Voucher) -->
+                        <div class="doc-settings" style="display: none;">
                             <label class="doc-label">Tipo de Documento</label>
                             <div class="doc-toggle">
                                 <button class="doc-btn active" onclick="setDocType('boleta')">Boleta</button>

@@ -95,22 +95,33 @@ const defaultProducts = [
 ];
 
 // State
-let products = [];
+let products = defaultProducts; // Initialize with defaults as fallback
 
 // Firestore Listener for Products
 const productsRef = collection(db, 'products');
 onSnapshot(productsRef, (snapshot) => {
-    products = snapshot.docs.map(doc => ({
+    const fetchedProducts = snapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
     })).filter(p => p.status !== 'inactive'); // Filter out inactive products
 
-    // If first time and empty?
-    if (products.length === 0) {
-        console.log("No hay productos en Firestore.");
-        productsContainer.innerHTML = '<div class="no-results"><p>No hay productos disponibles.</p></div>';
+    if (fetchedProducts.length > 0) {
+        products = fetchedProducts;
+        console.log("DEBUG: Loaded", products.length, "products from Firestore");
+    } else {
+        console.log("DEBUG: Firestore returned empty list, keeping defaults or showing empty state depending on logic.");
+        // We might want to keep defaults if Firestore is empty? 
+        // Or if Firestore is explicitly empty, we should respect it.
+        // Let's assume if Firestore works but is empty, we show empty.
+        products = fetchedProducts;
     }
 
+    renderProducts();
+    renderAridosProducts();
+}, (error) => {
+    console.error("Error getting products from Firestore:", error);
+    console.log("Using default products due to error.");
+    // products remains as defaultProducts
     renderProducts();
     renderAridosProducts();
 });
@@ -172,7 +183,9 @@ const formatPrice = (price) => {
 
 // Render Products
 // Render Products
-window.renderProducts = (category = 'all', searchTerm = '') => {
+// Render Products
+const renderProducts = (category = 'all', searchTerm = '') => {
+    window.renderProducts = renderProducts; // Ensure it's available globally early if needed
     if (!productsContainer) return;
 
     // Determine if this is a search operation or a category switch
@@ -267,6 +280,7 @@ window.renderProducts = (category = 'all', searchTerm = '') => {
         setTimeout(executeRender, 300); // Small delay for effect only on categories
     }
 };
+window.renderProducts = renderProducts; // Assign to window at end of definition
 
 // Add to Cart Function
 
@@ -288,9 +302,59 @@ filterButtons.forEach(btn => {
 
 // Search Functionality
 if (searchInput) {
+    // Search Suggestions
+    const suggestionsContainer = document.getElementById('search-suggestions');
+
+    const renderSuggestions = (term) => {
+        if (!suggestionsContainer) return;
+
+        if (term.length < 1) {
+            suggestionsContainer.classList.remove('show');
+            suggestionsContainer.innerHTML = '';
+            return;
+        }
+
+        const matches = products.filter(p =>
+            p.name.toLowerCase().includes(term.toLowerCase()) ||
+            p.category.toLowerCase().includes(term.toLowerCase())
+        ).slice(0, 5); // Limit to 5 suggestions
+
+        if (matches.length > 0) {
+            suggestionsContainer.innerHTML = matches.map(p => `
+                <div class="suggestion-item" onclick="selectSuggestion('${p.name.replace(/'/g, "\\'")}')">
+                    <img src="${p.image}" alt="${p.name}">
+                    <span>${p.name}</span>
+                </div>
+            `).join('');
+            suggestionsContainer.classList.add('show');
+        } else {
+            suggestionsContainer.classList.remove('show');
+        }
+    };
+
+    window.selectSuggestion = (name) => {
+        searchInput.value = name;
+        suggestionsContainer.classList.remove('show');
+        if (productsContainer) {
+            renderProducts('all', name);
+            filterButtons.forEach(b => b.classList.remove('active'));
+        } else {
+            window.location.href = `index.html?search=${encodeURIComponent(name)}`;
+        }
+    };
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            suggestionsContainer.classList.remove('show');
+        }
+    });
+
     // Real-time search on input
     searchInput.addEventListener('input', (e) => {
         const term = searchInput.value;
+        renderSuggestions(term);
+
         if (productsContainer) {
             // We are on Index, do realtime
             renderProducts('all', term);
@@ -304,8 +368,13 @@ if (searchInput) {
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             const term = searchInput.value;
-            // If we are NOT on index, redirect
-            if (!productsContainer) {
+            suggestionsContainer.classList.remove('show');
+
+            if (productsContainer) {
+                // Scroll to products
+                const productsSection = document.getElementById('productos');
+                if (productsSection) productsSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
                 window.location.href = `index.html?search=${encodeURIComponent(term)}`;
             }
         }
@@ -316,8 +385,12 @@ if (searchInput) {
     if (searchBtn) {
         searchBtn.addEventListener('click', () => {
             const term = searchInput.value;
+            suggestionsContainer.classList.remove('show');
             if (productsContainer) {
                 renderProducts('all', term);
+                // Scroll to products
+                const productsSection = document.getElementById('productos');
+                if (productsSection) productsSection.scrollIntoView({ behavior: 'smooth' });
             } else {
                 window.location.href = `index.html?search=${encodeURIComponent(term)}`;
             }
@@ -364,7 +437,8 @@ navLinks.forEach(link => {
 });
 
 // Render Áridos Products (for the dedicated section)
-window.renderAridosProducts = () => {
+const renderAridosProducts = () => {
+    window.renderAridosProducts = renderAridosProducts;
     const aridosContainer = document.getElementById('aridos-products-container');
     if (!aridosContainer) return;
 
@@ -453,11 +527,13 @@ window.toggleCart = () => {
     cartDrawer.classList.toggle('open');
     cartOverlay.classList.toggle('open');
 };
+const toggleCart = window.toggleCart; // Local alias
 
 window.openCart = () => {
     cartDrawer.classList.add('open');
     cartOverlay.classList.add('open');
 };
+const openCart = window.openCart; // Local alias
 
 // Close Cart Events
 closeCartBtn.addEventListener('click', toggleCart);
@@ -469,16 +545,17 @@ cartTrigger.addEventListener('click', (e) => {
 
 // Update renderCart
 // Adjust Quantity on Product Card
-window.adjustCardQty = (btn, delta) => {
+const adjustCardQty = (btn, delta) => {
     const input = btn.parentElement.querySelector('.qty-input');
     let val = parseInt(input.value) || 1;
     val += delta;
     if (val < 1) val = 1;
     input.value = val;
 };
+window.adjustCardQty = adjustCardQty;
 
 // Change Product Card Image
-window.changeCardImage = (id, direction, event) => {
+const changeCardImage = (id, direction, event) => {
     if (event) event.stopPropagation(); // Prevent clicking on card if card has click event
 
     const product = products.find(p => p.id === id);
@@ -500,7 +577,8 @@ window.changeCardImage = (id, direction, event) => {
 };
 
 // Render Cart Items
-window.renderCartItems = () => {
+const renderCartItems = () => {
+    window.renderCartItems = renderCartItems;
     cartItemsContainer.innerHTML = '';
 
     if (cart.length === 0) {
@@ -544,7 +622,8 @@ window.renderCartItems = () => {
 };
 
 // Update Cart Quantity
-window.updateCartQty = (id, newQty) => {
+const updateCartQty = (id, newQty) => {
+    window.updateCartQty = updateCartQty;
     if (newQty < 1) {
         // Optional: Ask to remove or just remove
         removeFromCart(id);
@@ -561,7 +640,8 @@ window.updateCartQty = (id, newQty) => {
 };
 
 // Remove from Cart
-window.removeFromCart = (id) => {
+const removeFromCart = (id) => {
+    window.removeFromCart = removeFromCart;
     const index = cart.findIndex(item => item.id === id);
     if (index > -1) {
         cart.splice(index, 1);
@@ -572,7 +652,8 @@ window.removeFromCart = (id) => {
 };
 
 // Add to Cart
-window.addToCart = (id, btnElement) => {
+const addToCart = (id, btnElement) => {
+    window.addToCart = addToCart;
     const product = products.find(p => p.id === id);
     if (!product) return;
 

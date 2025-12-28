@@ -1,5 +1,6 @@
 import { db, storage } from './firebase-config.js';
-import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+import { db, storage } from './firebase-config.js';
+import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 // Firebase Storage no es necesario - imágenes guardadas como base64 en Firestore
 
 const ADMIN_PASS = "admin123";
@@ -56,6 +57,25 @@ onSnapshot(movementsQuery, (snapshot) => {
     }));
     if (itemActiveTab === 'movements') renderMovementsHistory();
 });
+
+// Settings Listener (Folio)
+let posSettings = { currentFolio: 1000 };
+const settingsRef = collection(db, 'settings');
+onSnapshot(settingsRef, (snapshot) => {
+    const configDoc = snapshot.docs.find(d => d.id === 'pos_config');
+    if (configDoc) {
+        posSettings = configDoc.data();
+        updateFolioDisplay();
+    } else {
+        // Initialize if not exists
+        setDoc(doc(db, 'settings', 'pos_config'), { currentFolio: 1000 });
+    }
+});
+
+const updateFolioDisplay = () => {
+    const display = document.getElementById('current-folio-display');
+    if (display) display.textContent = posSettings.currentFolio || '---';
+};
 
 // Users Listener and Initialization
 const usersRef = collection(db, 'users');
@@ -594,36 +614,32 @@ window.formatRut = (input) => {
 
 const dteModal = document.getElementById('dte-modal');
 
-const generateDTE = () => {
+const generateDTE = async () => {
     // Totals calculation
     const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    const dteNumber = Math.floor(Math.random() * 900000) + 100000; // Simulated Folio
+    const dteNumber = posSettings.currentFolio || 1000;
 
     // Update DTE Visualization Content
-    document.getElementById('dte-title').textContent = currentDocType === 'factura' ? 'FACTURA ELECTRÓNICA' : 'BOLETA ELECTRÓNICA';
-    document.getElementById('dte-number').textContent = 'Nº FOLIO: ' + dteNumber;
+    document.getElementById('dte-title').textContent = 'VOUCHER DE VENTA';
+    document.getElementById('dte-number').textContent = 'FOLIO Nº ' + dteNumber;
     document.getElementById('dte-total').textContent = formatPrice(total);
 
-    // Client Info Section (for Facturas)
-    const clientInfoDiv = document.getElementById('dte-client-info');
-    if (currentDocType === 'factura') {
-        const rut = document.getElementById('cli-rut').value;
-        const name = document.getElementById('cli-name').value;
-        const address = document.getElementById('cli-address').value || 'SANTIAGO, CHILE';
-        const giro = document.getElementById('cli-giro').value || 'COMERCIO AL POR MENOR';
+    // Company Info Header
+    const dteHeader = document.querySelector('.dte-header');
+    dteHeader.innerHTML = `
+        <h3>COMERCIALIZADORA RIO LEBU SPA</h3>
+        <p>R.U.T.: 76.772.476-4</p>
+        <p>GIRO: MAQUINARIA E INDUSTRIAL</p>
+        <p>DIRECCIÓN: FREIRE 520, LEBU</p>
+        <hr>
+        <h2 id="dte-title">VOUCHER DE VENTA</h2>
+        <p id="dte-number">FOLIO Nº ${dteNumber}</p>
+        <p>FECHA: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+    `;
 
-        clientInfoDiv.innerHTML = `
-            <div style="text-align: left; margin: 10px 0; font-size: 0.8rem;">
-                <p><strong>RUT:</strong> ${rut}</p>
-                <p><strong>RAZÓN SOCIAL:</strong> ${name.toUpperCase()}</p>
-                <p><strong>GIRO:</strong> ${giro.toUpperCase()}</p>
-                <p><strong>DIRECCIÓN:</strong> ${address.toUpperCase()}</p>
-            </div>
-        `;
-        clientInfoDiv.style.display = 'block';
-    } else {
-        clientInfoDiv.style.display = 'none';
-    }
+    // Client Info Section (Always hidden for Voucher unless requested otherwise)
+    const clientInfoDiv = document.getElementById('dte-client-info');
+    clientInfoDiv.style.display = 'none';
 
     // Detail Rows
     const dteItemsDiv = document.getElementById('dte-items');
@@ -645,14 +661,29 @@ const generateDTE = () => {
     dteModal.classList.add('open');
 
     // Record into History
-    recordMovement({
+    await recordMovement({
         type: 'sale',
-        docType: currentDocType,
+        docType: 'VOUCHER',
         folio: dteNumber,
         items: cart.map(i => `${i.qty}x ${i.name}`),
         total: total,
-        seller: "Admin Principal"
+        seller: getCurrentUser().name || "Admin"
     });
+
+    // Increment Folio in Firestore
+    try {
+        await updateDoc(doc(db, 'settings', 'pos_config'), {
+            currentFolio: Number(dteNumber) + 1
+        });
+    } catch (e) {
+        console.error("Error incrementing folio:", e);
+    }
+};
+
+const getCurrentUser = () => {
+    try {
+        return JSON.parse(sessionStorage.getItem('mariomari_admin_user')) || {};
+    } catch { return {}; }
 };
 
 const recordMovement = async (data) => {
@@ -795,6 +826,43 @@ if (closeAddModal) {
 
 // Global variable for base64 storage
 let uploadedImagesList = [];
+// Edit Folio Logic
+const btnEditFolio = document.getElementById('btn-edit-folio');
+if (btnEditFolio) {
+    btnEditFolio.addEventListener('click', async () => {
+        const user = getCurrentUser();
+        if (user.role !== 'admin') {
+            alert("Solo administradores pueden modificar el folio.");
+            return;
+        }
+
+        const newFolio = prompt("Ingrese el nuevo número de Folio:", posSettings.currentFolio);
+        if (newFolio !== null) {
+            const folioNum = parseInt(newFolio);
+            if (!isNaN(folioNum) && folioNum > 0) {
+                try {
+                    await updateDoc(doc(db, 'settings', 'pos_config'), {
+                        currentFolio: folioNum
+                    });
+                } catch (e) {
+                    alert("Error al actualizar folio: " + e.message);
+                }
+            } else {
+                alert("Número inválido.");
+            }
+        }
+    });
+}
+// Show edit button only for admins
+const revealEditFolio = () => {
+    const user = getCurrentUser();
+    if (user.role === 'admin') {
+        const btn = document.getElementById('btn-edit-folio');
+        if (btn) btn.style.display = 'inline-block';
+    }
+};
+// Check on load/login
+setTimeout(revealEditFolio, 1000);
 
 // Helper to render previews
 const renderImagePreviews = () => {
