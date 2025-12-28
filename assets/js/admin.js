@@ -1357,6 +1357,18 @@ function updateProductSuggestions() {
 
 function populateSellerFilter() {
     if (!movementsFilterSeller) return;
+    const currentUser = getCurrentUser();
+    const isAdmin = currentUser.role === 'admin';
+
+    if (!isAdmin) {
+        movementsFilterSeller.innerHTML = `<option value="${currentUser.name}">${currentUser.name}</option>`;
+        movementsFilterSeller.value = currentUser.name;
+        movementsFilterSeller.disabled = true;
+        return;
+    }
+
+    // Admin view: see all sellers
+    movementsFilterSeller.disabled = false;
     const currentVal = movementsFilterSeller.value;
     const sellers = [...new Set(movementsHistory.map(m => m.seller))].filter(Boolean).sort();
 
@@ -1373,6 +1385,9 @@ function populateSellerFilter() {
 const renderMovementsHistory = () => {
     movementsBody.innerHTML = '';
 
+    const currentUser = getCurrentUser();
+    const isAdmin = currentUser.role === 'admin';
+
     // Get filter values
     const dateVal = movementsFilterDate ? movementsFilterDate.value : '';
     const prodVal = movementsFilterProduct ? movementsFilterProduct.value.toLowerCase() : '';
@@ -1380,6 +1395,11 @@ const renderMovementsHistory = () => {
     const typeVal = movementsFilterType ? movementsFilterType.value : '';
 
     const filtered = movementsHistory.filter(m => {
+        // Role based restriction: Non-admins ONLY see their own movements
+        if (!isAdmin && m.seller !== currentUser.name) {
+            return false;
+        }
+
         // Date Filter (Compare YYYY-MM-DD)
         // m.date is localized string like "27/12/2025, 23:00:00". We need to handle this carefully.
         // Option: convert m.id (timestamp) to YYYY-MM-DD
@@ -1462,8 +1482,17 @@ if (btnClearFilters) {
 
 if (btnDailyReport) {
     btnDailyReport.addEventListener('click', () => {
+        const currentUser = getCurrentUser();
+        const isAdmin = currentUser.role === 'admin';
         const today = new Date().toLocaleDateString();
-        const todaysMovements = movementsHistory.filter(m => new Date(m.date).toLocaleDateString() === today);
+
+        // Filter by date AND seller if not admin
+        const todaysMovements = movementsHistory.filter(m => {
+            const isToday = new Date(m.date).toLocaleDateString() === today;
+            if (!isToday) return false;
+            if (!isAdmin && m.seller !== currentUser.name) return false;
+            return true;
+        });
 
         const sales = todaysMovements.filter(m => m.type === 'sale');
         const totalSales = sales.reduce((sum, s) => sum + s.total, 0);
