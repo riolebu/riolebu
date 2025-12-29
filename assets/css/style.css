@@ -510,7 +510,7 @@ img {
     gap: 20px;
 }
 
-.cat-card {
+.category-card {
     background: var(--white);
     padding: 30px;
     border-radius: var(--radius);
@@ -521,24 +521,24 @@ img {
     border: 1px solid transparent;
 }
 
-.cat-card:hover {
+.category-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-md);
     border-color: var(--primary);
 }
 
-.cat-card i {
+.category-card i {
     font-size: 2.5rem;
     color: var(--secondary);
     margin-bottom: 15px;
     transition: var(--transition);
 }
 
-.cat-card:hover i {
+.category-card:hover i {
     color: var(--primary);
 }
 
-.cat-card span {
+.category-card span {
     display: block;
     font-weight: 600;
 }

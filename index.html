@@ -124,28 +124,35 @@
                 <a href="#" class="view-all">Ver todas <i class="fa-solid fa-chevron-right"></i></a>
             </div>
             <div class="category-grid">
-                <div class="cat-card">
+                <div class="category-card" onclick="renderProducts('maquinaria')">
                     <i class="fa-solid fa-tractor"></i>
                     <span>Maquinaria</span>
                 </div>
-                <div class="cat-card">
-                    <i class="fa-solid fa-engine"></i>
+                <div class="category-card" onclick="renderProducts('motores')">
                     <i class="fa-solid fa-gear"></i>
                     <span>Motores</span>
                 </div>
-                <div class="cat-card">
+                <div class="category-card" onclick="renderProducts('generadores')">
                     <i class="fa-solid fa-bolt"></i>
                     <span>Generadores</span>
                 </div>
-                <div class="cat-card">
+                <div class="category-card" onclick="renderProducts('herramientas')">
                     <i class="fa-solid fa-screwdriver-wrench"></i>
                     <span>Herramientas</span>
                 </div>
-                <div class="cat-card">
+                <div class="category-card" onclick="renderProducts('desarmaduria')">
+                    <i class="fa-solid fa-gears"></i>
+                    <span>Desarmaduría</span>
+                </div>
+                <div class="category-card" onclick="renderProducts('equipos')">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Equipos</span>
+                </div>
+                <div class="category-card" onclick="renderProducts('seguridad')">
                     <i class="fa-solid fa-helmet-safety"></i>
                     <span>Seguridad</span>
                 </div>
-                <div class="cat-card">
+                <div class="category-card" onclick="renderProducts('repuestos')">
                     <i class="fa-solid fa-truck-pickup"></i>
                     <span>Repuestos</span>
                 </div>
@@ -166,6 +173,8 @@
                 <button class="filter-btn active" data-filter="all">Todos</button>
                 <button class="filter-btn" data-filter="maquinaria">Maquinaria</button>
                 <button class="filter-btn" data-filter="motores">Motores</button>
+                <button class="filter-btn" data-filter="desarmaduria">Desarmaduría</button>
+                <button class="filter-btn" data-filter="equipos">Equipos</button>
                 <button class="filter-btn" data-filter="herramientas">Herramientas</button>
             </div>
 
