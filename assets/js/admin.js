@@ -1055,60 +1055,36 @@ window.editProduct = async (id) => {
     const user = getCurrentUser();
     const isAdmin = user && user.role === 'admin';
 
-    // 1. Editar Nombre
-    const newName = prompt(`Editar Nombre para: ${product.name}`, product.name);
-    if (newName === null) return; // Cancelar todo
+    // Open modal and populate fields
+    const modal = document.getElementById('edit-product-modal');
+    const form = document.getElementById('edit-product-form');
 
-    // 2. Editar Stock
-    const newStockStr = prompt(`Editar Stock para: ${product.name}\nActual: ${product.stock}`, product.stock);
-    if (newStockStr === null) return;
-    const newStock = parseInt(newStockStr);
+    document.getElementById('edit-prod-docid').value = product.docId || '';
+    document.getElementById('edit-prod-id').value = product.id;
+    document.getElementById('edit-prod-name').value = product.name;
+    document.getElementById('edit-prod-category').value = product.category;
+    document.getElementById('edit-prod-price').value = product.price;
+    document.getElementById('edit-prod-stock').value = product.stock;
+    document.getElementById('edit-prod-doc').value = product.document || '';
+    document.getElementById('edit-prod-obs').value = product.observations || '';
 
-    let updateData = {
-        name: newName.trim(),
-        stock: !isNaN(newStock) ? newStock : product.stock
-    };
+    // Handle price field restriction for non-admin users
+    const priceField = document.getElementById('edit-prod-price');
+    const priceRestriction = document.getElementById('edit-price-restriction');
 
-    // 3. Editar Precio (Solo Admin)
-    if (isAdmin) {
-        const newPriceStr = prompt(`Editar Precio para: ${product.name}\nActual: ${product.price}`, product.price);
-        if (newPriceStr !== null) {
-            const priceInt = parseInt(newPriceStr);
-            if (!isNaN(priceInt) && priceInt >= 0) {
-                updateData.price = priceInt;
-            } else {
-                alert('Precio inválido, se mantendrá el actual.');
-            }
-        }
+    if (!isAdmin) {
+        priceField.readOnly = true;
+        priceField.style.backgroundColor = '#f1f1f1';
+        priceField.style.cursor = 'not-allowed';
+        priceRestriction.style.display = 'block';
+    } else {
+        priceField.readOnly = false;
+        priceField.style.backgroundColor = '';
+        priceField.style.cursor = '';
+        priceRestriction.style.display = 'none';
     }
 
-    // 4. Editar Observaciones
-    const newObs = prompt(`Editar Observaciones para: ${product.name}`, product.observations || '');
-    if (newObs !== null) {
-        updateData.observations = newObs.trim();
-    }
-
-    // Registrar movimiento si el stock cambió
-    if (!isNaN(newStock) && newStock !== product.stock) {
-        const diff = newStock - product.stock;
-        await recordMovement({
-            type: 'entry',
-            docType: diff > 0 ? 'INGRESO' : 'AJUSTE',
-            items: [`${Math.abs(diff)}x ${newName} (Editado)`],
-            total: 0,
-            seller: `${user.name || "Admin"} (Manual)`
-        });
-    }
-
-    if (product.docId) {
-        try {
-            const prodRef = doc(db, 'products', product.docId);
-            await updateDoc(prodRef, updateData);
-            // El snapshot actualizará la UI
-        } catch (err) {
-            alert("Error al actualizar producto: " + err.message);
-        }
-    }
+    modal.classList.add('open');
 };
 
 window.editStock = (id) => editProduct(id); // Alias para compatibilidad si hay otros botones
@@ -1187,6 +1163,77 @@ const revealEditFolio = () => {
 };
 // Check on load/login
 setTimeout(revealEditFolio, 1000);
+
+// Edit Product Modal Handlers
+const editProductModal = document.getElementById('edit-product-modal');
+const closeEditProductModal = document.getElementById('close-edit-product-modal');
+const editProductForm = document.getElementById('edit-product-form');
+
+if (closeEditProductModal) {
+    closeEditProductModal.addEventListener('click', () => {
+        editProductModal.classList.remove('open');
+    });
+}
+
+if (editProductForm) {
+    editProductForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const docId = document.getElementById('edit-prod-docid').value;
+        const productId = parseInt(document.getElementById('edit-prod-id').value);
+        const originalProduct = products.find(p => p.id === productId);
+
+        if (!originalProduct || !docId) {
+            alert('Error: Producto no encontrado');
+            return;
+        }
+
+        const user = getCurrentUser();
+        const isAdmin = user && user.role === 'admin';
+
+        const newName = document.getElementById('edit-prod-name').value.trim();
+        const newCategory = document.getElementById('edit-prod-category').value;
+        const newPrice = parseInt(document.getElementById('edit-prod-price').value);
+        const newStock = parseInt(document.getElementById('edit-prod-stock').value);
+        const newDoc = document.getElementById('edit-prod-doc').value.trim();
+        const newObs = document.getElementById('edit-prod-obs').value.trim();
+
+        let updateData = {
+            name: newName,
+            category: newCategory,
+            stock: newStock,
+            document: newDoc || '---',
+            observations: newObs || ''
+        };
+
+        // Only update price if user is admin
+        if (isAdmin) {
+            updateData.price = newPrice;
+        }
+
+        // Register stock movement if changed
+        if (newStock !== originalProduct.stock) {
+            const diff = newStock - originalProduct.stock;
+            await recordMovement({
+                type: 'entry',
+                docType: diff > 0 ? 'INGRESO' : 'AJUSTE',
+                items: [`${Math.abs(diff)}x ${newName} (Editado)`],
+                total: 0,
+                seller: `${user.name || "Admin"} (Manual)`
+            });
+        }
+
+        try {
+            const prodRef = doc(db, 'products', docId);
+            await updateDoc(prodRef, updateData);
+            alert('Producto actualizado correctamente');
+            editProductModal.classList.remove('open');
+        } catch (err) {
+            alert("Error al actualizar producto: " + err.message);
+        }
+    });
+}
+
 
 // Helper to render previews
 const renderImagePreviews = () => {

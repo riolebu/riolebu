@@ -567,6 +567,78 @@
         </div>
     </div>
 
+    <!-- Edit Product Details Modal -->
+    <div id="edit-product-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Editar Detalles del Producto</h3>
+                <button class="close-modal" id="close-edit-product-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="edit-product-form">
+                <input type="hidden" id="edit-prod-docid">
+                <input type="hidden" id="edit-prod-id">
+
+                <div class="form-group">
+                    <label>Nombre del Producto</label>
+                    <input type="text" id="edit-prod-name" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="edit-prod-category">
+                            <option value="maquinaria">Maquinaria</option>
+                            <optgroup label="Motores">
+                                <option value="motores:electricos">Motores Eléctricos</option>
+                                <option value="motores:combustion">Motores Combustión</option>
+                            </optgroup>
+                            <optgroup label="Desarmaduría">
+                                <option value="desarmaduria:motores_combustion">Motores Combustión (D)</option>
+                                <option value="desarmaduria:excavadora">Máquina Excavadora</option>
+                                <option value="desarmaduria:hidraulica">Máquina Hidráulica</option>
+                                <option value="desarmaduria:chevrolet">Camión Chevrolet</option>
+                                <option value="desarmaduria:scania">Camión Scania</option>
+                                <option value="desarmaduria:caterpillar">Camión Caterpillar</option>
+                                <option value="desarmaduria:renault">Camión Renault</option>
+                            </optgroup>
+                            <option value="equipos">Equipos</option>
+                            <option value="generadores">Generadores</option>
+                            <option value="herramientas">Herramientas</option>
+                            <option value="seguridad">Seguridad</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio (CLP)</label>
+                        <input type="number" id="edit-prod-price" min="0" required>
+                        <small id="edit-price-restriction" style="display: none; color: #666; margin-top: 5px;">
+                            <i class="fa-solid fa-lock"></i> Solo administradores pueden editar el precio
+                        </small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stock</label>
+                        <input type="number" id="edit-prod-stock" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Documento Asociado</label>
+                        <input type="text" id="edit-prod-doc" placeholder="N° Factura/Guía">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="edit-prod-obs" rows="4" placeholder="Detalles técnicos, notas, etc."></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary-modal" style="width: 100%;">
+                    <i class="fa-solid fa-save"></i> Guardar Cambios
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Change Role Modal -->
     <div id="change-role-modal" class="modal-overlay">
         <div class="modal-box">
