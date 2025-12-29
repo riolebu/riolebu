@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Database - Rio Lebu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --secondary: #1976d2;
+            --bg: #f5f5f5;
+            --card: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        p {
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .warning {
+            background-color: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            background-color: #b71c1c;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #log {
+            margin-top: 2rem;
+            text-align: left;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-height: 150px;
+            overflow-y: auto;
+            background: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .success {
+            color: #388e3c;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <i class="fa-solid fa-database-slash" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+        <h1>Resetear Base de Datos</h1>
+        <p>Esta acción eliminará todos los <strong>productos, movimientos, clientes y otros usuarios</strong>. Solo se
+            conservará el administrador maestro.</p>
+
+        <div class="warning">
+            <i class="fa-solid fa-triangle-exclamation"></i> <strong>Atención:</strong> Esta acción no se puede deshacer
+            y funciona sobre la base de datos de producción.
+        </div>
+
+        <button id="reset-btn" class="btn">
+            <i class="fa-solid fa-trash-can"></i> VACIAR BASE DE DATOS
+        </button>
+
+        <div id="log"></div>
+        <div id="status"></div>
+    </div>
+
+    <!-- Firebase SDK via script tags for better file:// compatibility -->
+    <script type="importmap">
+        {
+          "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"
+          }
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, setDoc } from "firebase/firestore";
+
+        // Configuración directa para evitar problemas de importación local
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEujJWnPA3x_bWwfcOxvkyE259T7-fskM",
+            authDomain: "riolebu-b932d.firebaseapp.com",
+            projectId: "riolebu-b932d",
+            storageBucket: "riolebu-b932d.firebasestorage.app",
+            messagingSenderId: "298809741766",
+            appId: "1:298809741766:web:e3873c89caa5cc89bfa2c7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const resetBtn = document.getElementById('reset-btn');
+        const logDiv = document.getElementById('log');
+        const statusDiv = document.getElementById('status');
+
+        function addLog(msg) {
+            const p = document.createElement('p');
+            p.style.margin = '2px 0';
+            p.textContent = `> ${msg}`;
+            logDiv.appendChild(p);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        resetBtn.addEventListener('click', async () => {
+            const confirm1 = confirm('¿ESTÁS SEGURO? Esta acción borrará TODO excepto el Admin Maestro.');
+            if (!confirm1) return;
+            const confirm2 = confirm('¿ÚLTIMA ADVERTENCIA? Se borrarán todos los productos, clientes y movimientos de PRODUCCIÓN.');
+            if (!confirm2) return;
+
+            resetBtn.disabled = true;
+            logDiv.style.display = 'block';
+            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Iniciando limpieza...';
+
+            try {
+                const collections = ['products', 'movements', 'clients', 'users'];
+                const masterEmail = 'admin@mariomari.cl';
+
+                for (const colName of collections) {
+                    addLog(`Procesando colección: ${colName}...`);
+                    const colRef = collection(db, colName);
+                    const snapshot = await getDocs(colRef);
+
+                    let deletedCount = 0;
+                    const deletePromises = snapshot.docs.map(async (d) => {
+                        const data = d.data();
+
+                        if (colName === 'users' && data.email === masterEmail) {
+                            addLog(`[SKIP] Manteniendo admin: ${data.email}`);
+                            return;
+                        }
+
+                        await deleteDoc(doc(db, colName, d.id));
+                        deletedCount++;
+                    });
+
+                    await Promise.all(deletePromises);
+                    addLog(`Eliminados ${deletedCount} documentos de ${colName}.`);
+                }
+
+                addLog('Reseteando configuración de folio...');
+                await setDoc(doc(db, 'settings', 'pos_config'), { currentFolio: 1000 });
+                addLog('Folio reseteado a 1000.');
+
+                statusDiv.innerHTML = '<div class="success"><i class="fa-solid fa-circle-check"></i> Base de datos vaciada con éxito.</div>';
+                addLog('Operación completada.');
+
+            } catch (err) {
+                console.error(err);
+                statusDiv.innerHTML = `<div style="color:red"><i class="fa-solid fa-circle-xmark"></i> ERROR: ${err.message}</div>`;
+                addLog(`ERROR: ${err.message}`);
+                addLog(`Nota: Algunos navegadores bloquean estas acciones abriendo archivos locales (file://). Si falla, prueba usar un servidor local o el método de consola.`);
+            } finally {
+                resetBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

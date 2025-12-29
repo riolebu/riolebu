@@ -225,10 +225,8 @@ const hideMenusByRole = (user) => {
         if (inventarioMenu) inventarioMenu.style.display = 'none';
     }
 
-    // Solo admin puede ver Usuarios
-    if (user.role !== 'admin') {
-        if (usuariosMenu) usuariosMenu.style.display = 'none';
-    }
+    // SIEMPRE permitir ver Usuarios (para que puedan cambiar su contraseña)
+    if (usuariosMenu) usuariosMenu.style.display = 'block';
 };
 
 
@@ -296,10 +294,14 @@ const renderUsers = () => {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    let currentUser = null;
-    try {
-        currentUser = JSON.parse(sessionStorage.getItem('mariomari_admin_user'));
-    } catch (e) { console.error("Error checking current user", e); }
+    let currentUser = getCurrentUser();
+    const isAdmin = currentUser.role === 'admin';
+
+    // Ocultar botón "Nuevo Usuario" si no es admin
+    const btnAddUser = document.getElementById('btn-add-user');
+    if (btnAddUser) {
+        btnAddUser.style.display = isAdmin ? 'inline-block' : 'none';
+    }
 
     const roleLabels = {
         'admin': 'Administrador',
@@ -307,24 +309,29 @@ const renderUsers = () => {
         'sales_inventory': 'Venta e Inventario'
     };
 
-    adminUsers.forEach(u => {
+    // Si no es admin, solo mostrarse a sí mismo
+    const usersToDisplay = isAdmin ? adminUsers : adminUsers.filter(u => u.email === currentUser.email);
+
+    usersToDisplay.forEach(u => {
         const row = document.createElement('tr');
         const isActive = u.status === 'active';
 
         let actionButtons = '';
-        if (isActive) {
-            // Hide delete button for Master Admin
-            if (u.email !== 'admin@mariomari.cl') {
-                actionButtons = `<button class="btn-action btn-delete" onclick="toggleUserStatus('${u.docId}', 'inactive')" title="Desactivar"><i class="fa-solid fa-ban"></i></button>`;
+
+        // Solo el admin puede activar/desactivar usuarios
+        if (isAdmin) {
+            if (isActive) {
+                if (u.email !== 'admin@mariomari.cl') {
+                    actionButtons = `<button class="btn-action btn-delete" onclick="toggleUserStatus('${u.docId}', 'inactive')" title="Desactivar"><i class="fa-solid fa-ban"></i></button>`;
+                }
+            } else {
+                actionButtons = `<button class="btn-action btn-restore" onclick="toggleUserStatus('${u.docId}', 'active')" title="Activar"><i class="fa-solid fa-check"></i></button>`;
             }
-        } else {
-            actionButtons = `<button class="btn-action btn-restore" onclick="toggleUserStatus('${u.docId}', 'active')" title="Activar"><i class="fa-solid fa-check"></i></button>`;
         }
 
-        // Show password change button for ALL active users
-        // If it's the current user, it will ask for old pass.
-        // If it's another user, it will allow reset without old pass.
-        if (isActive) {
+        // Cualquier usuario activo puede cambiar SU propia contraseña
+        // El admin puede cambiar la de cualquiera
+        if (isActive && (isAdmin || u.email === currentUser.email)) {
             actionButtons += ` <button class="btn-action btn-edit" onclick="changeUserPassword('${u.docId}')" title="Cambiar Contraseña" style="background-color: #FFC107; color: black;"><i class="fa-solid fa-key"></i></button>`;
         }
 
