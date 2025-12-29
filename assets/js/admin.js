@@ -1082,6 +1082,12 @@ window.editProduct = async (id) => {
         }
     }
 
+    // 4. Editar Observaciones
+    const newObs = prompt(`Editar Observaciones para: ${product.name}`, product.observations || '');
+    if (newObs !== null) {
+        updateData.observations = newObs.trim();
+    }
+
     // Registrar movimiento si el stock cambió
     if (!isNaN(newStock) && newStock !== product.stock) {
         const diff = newStock - product.stock;
@@ -1262,6 +1268,7 @@ if (addProductForm) {
         const category = document.getElementById('new-prod-category').value;
         const price = parseInt(document.getElementById('new-prod-price').value);
         const stock = parseInt(document.getElementById('new-prod-stock').value);
+        const observations = document.getElementById('new-prod-obs').value.trim();
 
         // Validar permisos: solo admin y sales_inventory pueden crear productos
         let currentUser = null;
@@ -1349,7 +1356,8 @@ if (addProductForm) {
             image: finalImages[0],
             images: finalImages,
             stock: stock,
-            document: associatedDoc || '---'
+            document: associatedDoc || '---',
+            observations: observations || ''
         };
 
         try {
