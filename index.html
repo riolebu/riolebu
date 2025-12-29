@@ -188,12 +188,39 @@
 
             <!-- Filters -->
             <div class="filters">
-                <button class="filter-btn active" data-filter="all">Todos</button>
-                <button class="filter-btn" data-filter="maquinaria">Maquinaria</button>
-                <button class="filter-btn" data-filter="motores">Motores</button>
-                <button class="filter-btn" data-filter="desarmaduria">Desarmaduría</button>
-                <button class="filter-btn" data-filter="equipos">Equipos</button>
-                <button class="filter-btn" data-filter="herramientas">Herramientas</button>
+                <div class="filter-group">
+                    <button class="filter-btn active" data-filter="all">Todos</button>
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn" data-filter="maquinaria">Maquinaria</button>
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn" data-filter="motores">Motores <i
+                            class="fa-solid fa-chevron-down"></i></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" data-cat="motores:electricos">Motores Eléctricos</a></li>
+                        <li><a href="#" data-cat="motores:combustion">Motores Combustión</a></li>
+                    </ul>
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn" data-filter="desarmaduria">Desarmaduría <i
+                            class="fa-solid fa-chevron-down"></i></button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" data-cat="desarmaduria:motores_combustion">Motores Combustión</a></li>
+                        <li><a href="#" data-cat="desarmaduria:excavadora">Máquina Excavadora</a></li>
+                        <li><a href="#" data-cat="desarmaduria:hidraulica">Máquina Hidráulica</a></li>
+                        <li><a href="#" data-cat="desarmaduria:chevrolet">Camión Chevrolet</a></li>
+                        <li><a href="#" data-cat="desarmaduria:scania">Camión Scania</a></li>
+                        <li><a href="#" data-cat="desarmaduria:caterpillar">Camión Caterpillar</a></li>
+                        <li><a href="#" data-cat="desarmaduria:renault">Camión Renault</a></li>
+                    </ul>
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn" data-filter="equipos">Equipos</button>
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn" data-filter="herramientas">Herramientas</button>
+                </div>
             </div>
 
             <div class="products-grid" id="products-container">

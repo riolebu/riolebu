@@ -609,14 +609,22 @@ img {
     margin-bottom: 40px;
 }
 
+.filter-group {
+    position: relative;
+}
+
 .filter-btn {
     padding: 8px 20px;
     border: 1px solid #ddd;
-    background: transparent;
+    background: var(--white);
     border-radius: 20px;
     cursor: pointer;
     font-weight: 500;
     transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dark);
 }
 
 .filter-btn:hover,
@@ -624,6 +632,41 @@ img {
     background-color: var(--secondary);
     color: var(--primary);
     border-color: var(--secondary);
+}
+
+/* Filter Dropdown Specifics */
+.filter-group .dropdown-menu {
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background-color: var(--white);
+    border-top: 3px solid var(--primary);
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius);
+    min-width: 180px;
+}
+
+.filter-group:hover .dropdown-menu {
+    transform: translateX(-50%) translateY(0);
+}
+
+.filter-group .dropdown-menu a {
+    color: var(--text-dark) !important;
+    padding: 8px 15px !important;
+    font-weight: 500;
+}
+
+.filter-group .dropdown-menu a:hover {
+    background-color: var(--bg-light);
+    color: var(--primary) !important;
+}
+
+.filter-btn i.fa-chevron-down {
+    font-size: 0.7rem;
+    transition: transform 0.3s ease;
+}
+
+.filter-group:hover .filter-btn i.fa-chevron-down {
+    transform: rotate(180deg);
 }
 
 .products-grid {

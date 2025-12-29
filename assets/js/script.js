@@ -319,16 +319,35 @@ window.renderProducts = renderProducts; // Assign to window at end of definition
 
 
 // Event Listeners for Filters
-filterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Remove active class from all
-        filterButtons.forEach(b => b.classList.remove('active'));
-        // Add active to clicked
-        btn.classList.add('active');
-        // Render
-        renderProducts(btn.dataset.filter);
+const setupFilters = () => {
+    if (!filterButtons.length) return;
+
+    // Direct clicks on main filter buttons
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderProducts(btn.dataset.filter);
+        });
     });
-});
+
+    // Clicks on sub-category links inside filter group dropdowns
+    const filterSubLinks = document.querySelectorAll('.filter-group .dropdown-menu a');
+    filterSubLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const category = link.dataset.cat;
+
+            // Find parent group button to set as active
+            const parentBtn = link.closest('.filter-group').querySelector('.filter-btn');
+            filterButtons.forEach(b => b.classList.remove('active'));
+            if (parentBtn) parentBtn.classList.add('active');
+
+            renderProducts(category);
+        });
+    });
+};
+setupFilters();
 
 // Search Functionality
 if (searchInput) {
