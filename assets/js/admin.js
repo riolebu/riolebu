@@ -1287,7 +1287,6 @@ if (addProductForm) {
 
         let idParam = document.getElementById('new-prod-id').value;
         const associatedDoc = document.getElementById('new-prod-doc').value;
-        const imageUrlParam = document.getElementById('new-prod-image').value;
 
         let finalImages = [];
 
@@ -1323,11 +1322,7 @@ if (addProductForm) {
             console.log(`[IMAGES] ${finalImages.length} imagen(es) procesada(s)`);
         }
 
-        // Priority 2: URL input
-        if (imageUrlParam) {
-            console.log(`[UPLOAD] Usando URL proporcionada: ${imageUrlParam}`);
-            finalImages.push(imageUrlParam);
-        }
+
 
         // Fallback
         if (finalImages.length === 0) {
