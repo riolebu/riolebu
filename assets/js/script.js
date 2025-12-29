@@ -332,57 +332,84 @@ const renderProducts = (category = 'all', searchTerm = '') => {
 };
 window.renderProducts = renderProducts; // Assign to window at end of definition
 
-// Add to Cart Function
-window.addToCart = (productId, buttonElement) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
+// Add to Cart Logic (Consolidated)
+window.addToCart = (productId, btnElement) => {
+    // Robust search for product
+    const product = products.find(p => String(p.id) === String(productId));
+    if (!product) {
+        console.error("DEBUG: Product not found to add to cart:", productId);
+        return;
+    }
 
-    // Get quantity from the card
-    const card = buttonElement.closest('.product-card');
-    const qtyInput = card.querySelector('.qty-input');
-    const qty = parseInt(qtyInput.value) || 1;
+    let qtyToAdd = 1;
+    let qtyInput = null;
+
+    if (btnElement) {
+        // Try to find quantity input in the same card
+        const card = btnElement.closest('.product-card');
+        if (card) {
+            qtyInput = card.querySelector('.qty-input');
+            if (qtyInput) qtyToAdd = parseInt(qtyInput.value) || 1;
+        } else {
+            // Fallback for aridos or other structures
+            const actions = btnElement.closest('.product-actions');
+            if (actions) {
+                qtyInput = actions.querySelector('.qty-input');
+                if (qtyInput) qtyToAdd = parseInt(qtyInput.value) || 1;
+            }
+        }
+    }
 
     // Check stock availability
-    if (qty > product.stock) {
+    if (qtyToAdd > product.stock) {
         alert(`Lo sentimos, solo hay ${product.stock} unidades disponibles de este producto.`);
         return;
     }
 
     // Check if product already exists in cart
-    const existingItem = cart.find(item => item.id === productId);
+    const existingItem = cart.find(item => String(item.id) === String(productId));
 
     if (existingItem) {
         // Check if adding more would exceed stock
-        if (existingItem.qty + qty > product.stock) {
+        if (existingItem.qty + qtyToAdd > product.stock) {
             alert(`No puedes agregar más unidades. Stock disponible: ${product.stock}, ya tienes ${existingItem.qty} en el carrito.`);
             return;
         }
-        existingItem.qty += qty;
+        existingItem.qty += qtyToAdd;
     } else {
         cart.push({
             id: product.id,
             name: product.name,
             price: product.price,
             image: product.image,
-            qty: qty,
+            qty: qtyToAdd,
             stock: product.stock
         });
     }
 
-    saveCart();
     updateCartCount();
+    saveCart();
+    renderCartItems();
+    openCart();
 
     // Visual feedback
-    buttonElement.innerHTML = '<i class="fa-solid fa-check"></i> Agregado';
-    buttonElement.style.backgroundColor = '#28a745';
+    if (btnElement) {
+        const originalHTML = btnElement.innerHTML;
+        btnElement.innerHTML = '<i class="fa-solid fa-check"></i> Agregado';
+        btnElement.style.backgroundColor = '#28a745';
+        btnElement.classList.add('btn-success');
 
-    setTimeout(() => {
-        buttonElement.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Agregar';
-        buttonElement.style.backgroundColor = '';
-    }, 1500);
+        setTimeout(() => {
+            btnElement.innerHTML = originalHTML;
+            btnElement.style.backgroundColor = '';
+            btnElement.classList.remove('btn-success');
+        }, 1500);
+    }
 
-    // Reset quantity to 1
-    qtyInput.value = 1;
+    // Reset quantity to 1 if input exists
+    if (qtyInput) {
+        qtyInput.value = 1;
+    }
 };
 
 // Adjust quantity in product card
@@ -817,11 +844,11 @@ const renderCartItems = () => {
             <div class="item-details">
                 <h4>${item.name}</h4>
                 <div class="cart-qty-controls">
-                    <button class="mini-qty-btn" onclick="updateCartQty(${item.id}, ${item.qty - 1})"><i class="fa-solid fa-minus"></i></button>
+                    <button class="mini-qty-btn" onclick="updateCartQty('${item.id}', ${item.qty - 1})"><i class="fa-solid fa-minus"></i></button>
                     <span class="cart-qty-display">${item.qty}</span>
-                    <button class="mini-qty-btn" onclick="updateCartQty(${item.id}, ${item.qty + 1})"><i class="fa-solid fa-plus"></i></button>
+                    <button class="mini-qty-btn" onclick="updateCartQty('${item.id}', ${item.qty + 1})"><i class="fa-solid fa-plus"></i></button>
                 </div>
-                <button class="remove-item" onclick="removeFromCart(${item.id})">Eliminar</button>
+                <button class="remove-item" onclick="removeFromCart('${item.id}')">Eliminar</button>
             </div>
             <div class="item-total">
                 ${formatPrice(item.price * item.qty)}
@@ -837,12 +864,11 @@ const renderCartItems = () => {
 const updateCartQty = (id, newQty) => {
     window.updateCartQty = updateCartQty;
     if (newQty < 1) {
-        // Optional: Ask to remove or just remove
         removeFromCart(id);
         return;
     }
 
-    const item = cart.find(p => p.id === id);
+    const item = cart.find(p => String(p.id) === String(id));
     if (item) {
         item.qty = newQty;
         updateCartCount();
@@ -854,7 +880,7 @@ const updateCartQty = (id, newQty) => {
 // Remove from Cart
 const removeFromCart = (id) => {
     window.removeFromCart = removeFromCart;
-    const index = cart.findIndex(item => item.id === id);
+    const index = cart.findIndex(item => String(item.id) === String(id));
     if (index > -1) {
         cart.splice(index, 1);
         updateCartCount();
@@ -863,49 +889,7 @@ const removeFromCart = (id) => {
     }
 };
 
-// Add to Cart
-const addToCart = (id, btnElement) => {
-    window.addToCart = addToCart;
-    const product = products.find(p => p.id === id);
-    if (!product) return;
-
-    let qtyToAdd = 1;
-    if (btnElement) {
-        // Find the input in the same container
-        // Traverse up to .product-actions or just sibling search
-        const container = btnElement.closest('.product-actions');
-        // Note: I will update HTML to have product-actions wrapper. 
-        // If wrapper not there (old HTML), fallback to 1.
-        if (container) {
-            const input = container.querySelector('.qty-input');
-            if (input) qtyToAdd = parseInt(input.value) || 1;
-        }
-    }
-
-    // Check if exists
-    const existingItem = cart.find(item => item.id === id);
-    if (existingItem) {
-        existingItem.qty += qtyToAdd;
-    } else {
-        cart.push({ ...product, qty: qtyToAdd });
-    }
-
-    updateCartCount();
-    saveCart();
-    renderCartItems();
-    openCart();
-
-    // Visual feedback
-    if (btnElement) {
-        const originalHTML = btnElement.innerHTML;
-        btnElement.innerHTML = '<i class="fa-solid fa-check"></i>';
-        btnElement.style.backgroundColor = 'var(--success)';
-        setTimeout(() => {
-            btnElement.innerHTML = originalHTML;
-            btnElement.style.backgroundColor = '';
-        }, 1500);
-    }
-};
+// addToCart is now defined globally above
 
 const updateCartCount = () => {
     const totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
