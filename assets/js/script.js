@@ -668,7 +668,7 @@ const renderAridosProducts = () => {
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
-                <div class="product-image">
+                <div class="product-image" onclick="showProductObservations('${product.id}')" style="cursor: pointer;">
                     ${hasDiscount ? `<span class="discount-badge">-${discountPercentage}%</span>` : ''}
                     <img src="${product.image}" alt="${product.name}">
                     ${product.image === 'assets/images/products/generador.jpg' ? '<div class="no-image-overlay">Sin Imagen</div>' : ''}
@@ -1181,8 +1181,12 @@ renderProducts();
 
 // Show Product Observations
 window.showProductObservations = (productId) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
+    // Robust search (handle string vs number IDs)
+    const product = products.find(p => String(p.id) === String(productId));
+    if (!product) {
+        console.warn("DEBUG: Product not found for observations:", productId);
+        return;
+    }
 
     // Check if product has observations
     const observations = product.observations || 'No hay observaciones disponibles para este producto.';

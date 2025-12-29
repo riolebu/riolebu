@@ -724,6 +724,12 @@ img {
 .product-image img {
     max-height: 100%;
     object-fit: contain;
+    transition: transform 0.5s ease, filter 0.3s ease;
+}
+
+.product-image:hover img {
+    transform: scale(1.08);
+    filter: brightness(0.9);
 }
 
 .discount-badge {
