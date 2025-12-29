@@ -156,9 +156,12 @@
                     <table class="inventory-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Producto</th>
-                                <th>Categoría</th>
+                                <th onclick="sortInventory('id')" style="cursor: pointer;">ID <i
+                                        class="fa-solid fa-sort" id="sort-icon-id"></i></th>
+                                <th onclick="sortInventory('name')" style="cursor: pointer;">Producto <i
+                                        class="fa-solid fa-sort" id="sort-icon-name"></i></th>
+                                <th onclick="sortInventory('category')" style="cursor: pointer;">Categoría <i
+                                        class="fa-solid fa-sort" id="sort-icon-category"></i></th>
                                 <th>Precio</th>
                                 <th>Stock</th>
                                 <th>Acciones</th>

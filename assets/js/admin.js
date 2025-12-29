@@ -36,6 +36,8 @@ let products = [];
 let cart = []; // Local cart for POS
 let movementsHistory = [];
 let adminUsers = []; // Will be populated from Firestore
+let currentSortField = 'id';
+let currentSortOrder = 'asc';
 
 // Firestore Listeners
 const productsRef = collection(db, 'products');
@@ -945,6 +947,20 @@ const renderInventory = () => {
         filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm) || p.id.toString().includes(searchTerm));
     }
 
+    // Sorting logic
+    filtered.sort((a, b) => {
+        let valA = a[currentSortField];
+        let valB = b[currentSortField];
+
+        // Format values for proper comparison
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return currentSortOrder === 'asc' ? -1 : 1;
+        if (valA > valB) return currentSortOrder === 'asc' ? 1 : -1;
+        return 0;
+    });
+
     invBody.innerHTML = '';
 
     filtered.forEach(p => {
@@ -997,7 +1013,6 @@ window.toggleProductStatus = async (id, newStatus) => {
     if (!confirm(`¿Estás seguro de cambiar el estado de "${product.name}" a ${newStatus === 'active' ? 'ACTIVO' : 'INACTIVO'}?`)) {
         return;
     }
-
     try {
         const prodRef = doc(db, 'products', product.docId);
         await updateDoc(prodRef, { status: newStatus });
@@ -1005,6 +1020,32 @@ window.toggleProductStatus = async (id, newStatus) => {
     } catch (err) {
         alert("Error al actualizar estado: " + err.message);
     }
+};
+
+window.sortInventory = (field) => {
+    if (currentSortField === field) {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortField = field;
+        currentSortOrder = 'asc';
+    }
+
+    // Update icons
+    const icons = ['id', 'name', 'category'];
+    icons.forEach(id => {
+        const icon = document.getElementById(`sort-icon-${id}`);
+        if (icon) {
+            if (id === field) {
+                icon.className = `fa-solid fa-sort-${currentSortOrder === 'asc' ? 'up' : 'down'}`;
+                icon.style.color = 'var(--admin-primary)';
+            } else {
+                icon.className = 'fa-solid fa-sort';
+                icon.style.color = '#ccc';
+            }
+        }
+    });
+
+    renderInventory();
 };
 
 window.editProduct = async (id) => {
