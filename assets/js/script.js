@@ -265,9 +265,9 @@ const renderProducts = (category = 'all', searchTerm = '') => {
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
-                <div class="product-image">
+                <div class="product-image" onclick="showProductObservations(${product.id})">
                     ${hasDiscount ? `<span class="discount-badge">-${discountPercentage}%</span>` : ''}
-                    <img src="${product.image}" alt="${product.name}" id="img-prod-${product.id}" data-img-index="0">
+                    <img src="${product.image}" alt="${product.name}" id="img-prod-${product.id}" data-img-index="0" style="cursor: pointer;">
                     ${isPlaceholder ? '<div class="no-image-overlay">Sin Imagen</div>' : ''}
                     ${(product.images && product.images.length > 1) ? `
                         <button class="img-nav prev" onclick="changeCardImage(${product.id}, -1, event)" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 0 4px 4px 0;"><i class="fa-solid fa-chevron-left"></i></button>
@@ -1088,3 +1088,102 @@ const initHeroSlider = () => {
 
 // Initialize Slider
 initHeroSlider();
+
+// Show Product Observations
+window.showProductObservations = (productId) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    // Check if product has observations
+    const observations = product.observations || 'No hay observaciones disponibles para este producto.';
+
+    // Create modal overlay
+    const modalOverlay = document.createElement('div');
+    modalOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    `;
+
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        position: relative;
+        animation: slideDown 0.3s ease;
+    `;
+
+    modalContent.innerHTML = `
+        <button onclick="this.closest('[style*=\\'position: fixed\\']').remove()" style="
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s;
+        " onmouseover="this.style.color='#f37021'" onmouseout="this.style.color='#666'">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 style="margin: 0 0 20px 0; color: #0a192f; font-size: 1.5rem; padding-right: 30px;">
+            <i class="fa-solid fa-info-circle" style="color: #f37021; margin-right: 10px;"></i>
+            ${product.name}
+        </h3>
+        <div style="
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #f37021;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        ">
+            ${observations}
+        </div>
+    `;
+
+    modalOverlay.appendChild(modalContent);
+    document.body.appendChild(modalOverlay);
+
+    // Close on overlay click
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            modalOverlay.remove();
+        }
+    });
+
+    // Add CSS animations
+    if (!document.getElementById('obs-modal-animations')) {
+        const style = document.createElement('style');
+        style.id = 'obs-modal-animations';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideDown {
+                from { transform: translateY(-50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+};
+
