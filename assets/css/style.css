@@ -997,6 +997,10 @@ img {
     margin-bottom: 50px;
 }
 
+.footer-grid.footer-3-cols {
+    grid-template-columns: 1.5fr 1fr 1fr;
+}
+
 .footer-logo {
     margin-bottom: 20px;
 }
