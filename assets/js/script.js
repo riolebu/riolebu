@@ -1,5 +1,8 @@
-import { db } from './firebase-config.js';
-import { collection, onSnapshot, query, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+// Firebase instances are now available globally via window.db and window.storage
+// import { db } from './firebase-config.js';
+// import { collection, onSnapshot, query, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+console.log("DEBUG: script.js starting (Compat Mode)...");
 
 const defaultProducts = [
     {
@@ -96,35 +99,42 @@ const defaultProducts = [
 
 // State
 let products = defaultProducts; // Initialize with defaults as fallback
+console.log("DEBUG: Initial products count:", products.length);
+
 
 // Firestore Listener for Products
-const productsRef = collection(db, 'products');
-onSnapshot(productsRef, (snapshot) => {
-    const fetchedProducts = snapshot.docs.map(doc => ({
-        docId: doc.id,
-        ...doc.data()
-    })).filter(p => p.status !== 'inactive'); // Filter out inactive products
+// Firestore Listener for Products
+const productsRef = db.collection('products');
+productsRef.onSnapshot((snapshot) => {
+    console.log("DEBUG: Firestore snapshot received. Docs count:", snapshot.docs.length);
+    const fetchedProducts = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            docId: doc.id,
+            id: data.id || doc.id, // Fallback to docId if id is missing
+            ...data
+        };
+    }).filter(p => p.status !== 'inactive');
 
     if (fetchedProducts.length > 0) {
         products = fetchedProducts;
-        console.log("DEBUG: Loaded", products.length, "products from Firestore");
+        console.log("DEBUG: Loaded", products.length, "active products from Firestore");
     } else {
-        console.log("DEBUG: Firestore returned empty list, keeping defaults or showing empty state depending on logic.");
-        // We might want to keep defaults if Firestore is empty? 
-        // Or if Firestore is explicitly empty, we should respect it.
-        // Let's assume if Firestore works but is empty, we show empty.
-        products = fetchedProducts;
+        console.log("DEBUG: No active products in Firestore, staying with current products.");
+        if (snapshot.docs.length === 0) {
+            products = defaultProducts;
+        }
     }
 
     renderProducts();
-    renderAridosProducts();
+    if (typeof renderAridosProducts === 'function') renderAridosProducts();
 }, (error) => {
     console.error("Error getting products from Firestore:", error);
     console.log("Using default products due to error.");
-    // products remains as defaultProducts
     renderProducts();
-    renderAridosProducts();
+    if (typeof renderAridosProducts === 'function') renderAridosProducts();
 });
+
 
 // Helper to save products - used in older logic, now redirects to Firebase in admin
 const saveProducts = () => {
@@ -168,7 +178,8 @@ window.calculateAridos = () => {
 };
 
 // DOM Elements
-const productsContainer = document.getElementById('products-container');
+// DOM Elements
+let productsContainer = document.getElementById('products-container');
 const cartCountElement = document.getElementById('cart-count');
 const filterButtons = document.querySelectorAll('.filter-btn');
 const searchInput = document.getElementById('search-input');
@@ -207,7 +218,16 @@ const getCategoryLabel = (cat) => {
 // Render Products
 const renderProducts = (category = 'all', searchTerm = '') => {
     window.renderProducts = renderProducts; // Ensure it's available globally early if needed
-    if (!productsContainer) return;
+
+    // Re-verify container if it was missing
+    if (!productsContainer) {
+        productsContainer = document.getElementById('products-container');
+    }
+
+    if (!productsContainer) {
+        console.warn("DEBUG: products-container not found in DOM");
+        return;
+    }
 
     // Determine if this is a search operation or a category switch
     // We only simulate loading for category switches to be smooth
@@ -265,13 +285,13 @@ const renderProducts = (category = 'all', searchTerm = '') => {
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
-                <div class="product-image" onclick="showProductObservations(${product.id})">
+                <div class="product-image" onclick="showProductObservations('${product.id}')">
                     ${hasDiscount ? `<span class="discount-badge">-${discountPercentage}%</span>` : ''}
                     <img src="${product.image}" alt="${product.name}" id="img-prod-${product.id}" data-img-index="0" style="cursor: pointer;">
                     ${isPlaceholder ? '<div class="no-image-overlay">Sin Imagen</div>' : ''}
                     ${(product.images && product.images.length > 1) ? `
-                        <button class="img-nav prev" onclick="changeCardImage(${product.id}, -1, event)" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 0 4px 4px 0;"><i class="fa-solid fa-chevron-left"></i></button>
-                        <button class="img-nav next" onclick="changeCardImage(${product.id}, 1, event)" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px 0 0 4px;"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button class="img-nav prev" onclick="changeCardImage('${product.id}', -1, event)" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 0 4px 4px 0;"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="img-nav next" onclick="changeCardImage('${product.id}', 1, event)" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px 0 0 4px;"><i class="fa-solid fa-chevron-right"></i></button>
                     ` : ''}
                 </div>
                 <div class="product-info">
@@ -292,7 +312,7 @@ const renderProducts = (category = 'all', searchTerm = '') => {
                             <input type="number" class="qty-input" value="1" min="1" readonly>
                             <button class="qty-btn plus" onclick="adjustCardQty(this, 1)">+</button>
                         </div>
-                        <button class="btn btn-add" onclick="addToCart(${product.id}, this)">
+                        <button class="btn btn-add" onclick="addToCart('${product.id}', this)">
                             <i class="fa-solid fa-cart-shopping"></i> Agregar
                         </button>
                     </div>
@@ -376,16 +396,6 @@ window.adjustCardQty = (button, change) => {
     qtyInput.value = newQty;
 };
 
-// Update cart count badge
-const updateCartCount = () => {
-    if (cartCountElement) {
-        const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-        cartCountElement.textContent = totalItems;
-    }
-};
-
-// Initialize cart count on page load
-updateCartCount();
 
 
 // Event Listeners for Filters
@@ -681,7 +691,7 @@ const renderAridosProducts = () => {
                             <input type="number" class="qty-input" value="1" min="1" readonly>
                             <button class="qty-btn plus" onclick="adjustCardQty(this, 1)">+</button>
                         </div>
-                        <button class="btn btn-add" onclick="addToCart(${product.id}, this)">
+                        <button class="btn btn-add" onclick="addToCart('${product.id}', this)">
                             <i class="fa-solid fa-cart-shopping"></i> Agregar
                         </button>
                     </div>
@@ -1158,6 +1168,16 @@ const initHeroSlider = () => {
 
 // Initialize Slider
 initHeroSlider();
+
+// Initial render with defaults
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DEBUG: DOMContentLoaded, performing initial render");
+    renderProducts();
+    if (typeof renderAridosProducts === 'function') renderAridosProducts();
+});
+
+// Also trigger immediate render just in case DOM is already ready
+renderProducts();
 
 // Show Product Observations
 window.showProductObservations = (productId) => {
