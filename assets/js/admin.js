@@ -329,10 +329,15 @@ const renderUsers = () => {
             }
         }
 
-        // Cualquier usuario activo puede cambiar SU propia contraseña
-        // El admin puede cambiar la de cualquiera
+        // Cualquier usuario activo puede cambiar SU propia contraseña. El admin puede cambiar la de cualquiera.
         if (isActive && (isAdmin || u.email === currentUser.email)) {
             actionButtons += ` <button class="btn-action btn-edit" onclick="changeUserPassword('${u.docId}')" title="Cambiar Contraseña" style="background-color: #FFC107; color: black;"><i class="fa-solid fa-key"></i></button>`;
+        }
+
+        // Solo el usuario administrador maestro (admin@mariomari.cl) puede cambiar roles
+        const isMasterAdmin = currentUser.email === 'admin@mariomari.cl';
+        if (isActive && isMasterAdmin && u.email !== 'admin@mariomari.cl') {
+            actionButtons += ` <button class="btn-action" onclick="changeUserRole('${u.docId}')" title="Cambiar Rol" style="background-color: #4CAF50; color: white; margin-left: 5px;"><i class="fa-solid fa-user-tag"></i></button>`;
         }
 
         row.innerHTML = `
@@ -451,6 +456,34 @@ window.changeUserPassword = async (docId) => {
 
     } catch (e) {
         alert("Error al validar/actualizar: " + e.message);
+    }
+};
+
+window.changeUserRole = async (docId) => {
+    const user = adminUsers.find(u => u.docId === docId);
+    if (!user) return;
+
+    if (user.email === 'admin@mariomari.cl') {
+        alert("No se puede cambiar el rol del Administrador Master.");
+        return;
+    }
+
+    const newRole = prompt(`Cambiar rol para ${user.name}\nRoles disponibles: admin, sales, sales_inventory\nActual: ${user.role}`, user.role);
+
+    if (newRole === null) return;
+
+    const validRoles = ['admin', 'sales', 'sales_inventory'];
+    if (!validRoles.includes(newRole.toLowerCase())) {
+        alert("Rol inválido. Los roles permitidos son: admin, sales, sales_inventory");
+        return;
+    }
+
+    try {
+        await updateDoc(doc(db, 'users', docId), { role: newRole.toLowerCase() });
+        alert("Rol actualizado correctamente.");
+        // renderUsers se llamará automáticamente por el onSnapshot
+    } catch (e) {
+        alert("Error al actualizar rol: " + e.message);
     }
 };
 
