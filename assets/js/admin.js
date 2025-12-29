@@ -1369,11 +1369,11 @@ if (addProductForm) {
 
                 console.log(`[IMAGES] Imagen ${i + 1}: ${sizeKB} KB`);
 
-                // Advertencia si la imagen es grande (> 100KB)
-                if (sizeKB > 100) {
+                // Advertencia si la imagen es grande (> 1MB)
+                if (sizeKB > 1024) {
                     const continuar = confirm(
                         `⚠️ La imagen ${i + 1} es grande (${sizeKB} KB).\n\n` +
-                        `Recomendación: Usar imágenes < 100KB para mejor rendimiento.\n\n` +
+                        `Recomendación: Usar imágenes < 1MB para mejor rendimiento.\n\n` +
                         `¿Continuar de todas formas?`
                     );
                     if (!continuar) {
