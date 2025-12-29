@@ -314,6 +314,11 @@ img {
 .nav-list {
     display: flex;
     gap: 30px;
+    position: relative;
+}
+
+.nav-list li {
+    position: relative;
 }
 
 .nav-list a {
@@ -332,6 +337,59 @@ img {
 
 .nav-list a.highlight {
     color: var(--primary);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--secondary);
+    min-width: 220px;
+    box-shadow: var(--shadow-lg);
+    border-top: 3px solid var(--primary);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    z-index: 1100;
+    padding: 10px 0;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.nav-list li:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-menu li {
+    width: 100%;
+}
+
+.dropdown-menu a {
+    padding: 10px 20px !important;
+    display: block !important;
+    border-bottom: none !important;
+    font-size: 0.85rem !important;
+    color: #ccc !important;
+    transition: all 0.2s ease !important;
+}
+
+.dropdown-menu a:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--primary) !important;
+    padding-left: 25px !important;
+}
+
+.nav-list li>a i.fa-chevron-down {
+    font-size: 0.7rem;
+    margin-left: 5px;
+    transition: transform 0.3s ease;
+}
+
+.nav-list li:hover>a i.fa-chevron-down {
+    transform: rotate(180deg);
 }
 
 /* Hero */
@@ -596,7 +654,8 @@ img {
     justify-content: center;
     background-color: #f9f9f9;
     position: relative;
-    overflow: hidden; /* Ensure overlay doesn't spill out */
+    overflow: hidden;
+    /* Ensure overlay doesn't spill out */
 }
 
 .no-image-overlay {

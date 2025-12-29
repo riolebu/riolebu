@@ -74,13 +74,30 @@
         <div class="container">
             <ul class="nav-list" id="nav-list">
                 <li><a href="#" id="mobile-menu-btn" class="active"><i class="fa-solid fa-bars"></i> Categorías</a></li>
-                <li><a href="#">Maquinaria</a></li>
-                <li><a href="#">Motores</a></li>
-                <li><a href="#">Desarmaduría</a></li>
-                <li><a href="#">Equipos</a></li>
-                <li><a href="#">Generadores</a></li>
-                <li><a href="#">Herramientas</a></li>
-                <li><a href="#" class="highlight">Ofertas del Mes</a></li>
+                <li><a href="#" data-cat="maquinaria">Maquinaria</a></li>
+                <li class="has-dropdown">
+                    <a href="#" data-cat="motores">Motores <i class="fa-solid fa-chevron-down"></i></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" data-cat="motores:electricos">Motores Eléctricos</a></li>
+                        <li><a href="#" data-cat="motores:combustion">Motores Combustión</a></li>
+                    </ul>
+                </li>
+                <li class="has-dropdown">
+                    <a href="#" data-cat="desarmaduria">Desarmaduría <i class="fa-solid fa-chevron-down"></i></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" data-cat="desarmaduria:motores_combustion">Motores Combustión</a></li>
+                        <li><a href="#" data-cat="desarmaduria:excavadora">Máquina Excavadora</a></li>
+                        <li><a href="#" data-cat="desarmaduria:hidraulica">Máquina Hidráulica</a></li>
+                        <li><a href="#" data-cat="desarmaduria:chevrolet">Camión Chevrolet</a></li>
+                        <li><a href="#" data-cat="desarmaduria:scania">Camión Scania</a></li>
+                        <li><a href="#" data-cat="desarmaduria:caterpillar">Camión Caterpillar</a></li>
+                        <li><a href="#" data-cat="desarmaduria:renault">Camión Renault</a></li>
+                    </ul>
+                </li>
+                <li><a href="#" data-cat="equipos">Equipos</a></li>
+                <li><a href="#" data-cat="generadores">Generadores</a></li>
+                <li><a href="#" data-cat="herramientas">Herramientas</a></li>
+                <li><a href="#" class="highlight" data-cat="featured">Ofertas del Mes</a></li>
                 <li><a href="#" id="btn-download-catalog" style="color: #f37021; font-weight: bold;"><i
                             class="fa-solid fa-file-pdf"></i> Catálogo</a></li>
             </ul>

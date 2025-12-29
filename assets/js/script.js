@@ -440,23 +440,26 @@ if (mobileMenuBtn) {
 navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
         const href = link.getAttribute('href');
-        // Do not intercept if it's a real link (not #) and not an in-page anchor
         if (href && href !== '#' && !href.startsWith('#')) return;
 
         e.preventDefault();
-        const text = link.textContent.toLowerCase().trim();
 
-        // Map nav text to standard categories
-        let category = 'all';
-        if (text.includes('maquinaria')) category = 'maquinaria';
-        else if (text.includes('motores')) category = 'motores';
-        else if (text.includes('desarmaduría')) category = 'desarmaduria';
-        else if (text.includes('equipos')) category = 'equipos';
-        else if (text.includes('generadores')) category = 'generadores';
-        else if (text.includes('herramientas')) category = 'herramientas';
-        else if (text.includes('seguridad')) category = 'seguridad';
-        else if (text.includes('repuestos')) category = 'aridos';
-        else if (text.includes('ofertas del mes')) category = 'featured';
+        // Use data-cat attribute if exists, else fallback to text matching
+        let category = link.dataset.cat;
+
+        if (!category) {
+            const text = link.textContent.toLowerCase().trim();
+            if (text.includes('maquinaria')) category = 'maquinaria';
+            else if (text.includes('motores')) category = 'motores';
+            else if (text.includes('desarmaduría')) category = 'desarmaduria';
+            else if (text.includes('equipos')) category = 'equipos';
+            else if (text.includes('generadores')) category = 'generadores';
+            else if (text.includes('herramientas')) category = 'herramientas';
+            else if (text.includes('seguridad')) category = 'seguridad';
+            else if (text.includes('repuestos')) category = 'aridos';
+            else if (text.includes('ofertas del mes')) category = 'featured';
+            else category = 'all';
+        }
 
         renderProducts(category);
 
@@ -471,10 +474,12 @@ navLinks.forEach(link => {
 
         // Scroll to products
         const productsSection = document.getElementById('productos');
-        productsSection.scrollIntoView({ behavior: 'smooth' });
+        if (productsSection) {
+            productsSection.scrollIntoView({ behavior: 'smooth' });
+        }
 
         // Close mobile menu if open
-        navList.classList.remove('show');
+        if (navList) navList.classList.remove('show');
     });
 });
 
