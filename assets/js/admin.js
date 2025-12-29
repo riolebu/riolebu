@@ -1130,6 +1130,20 @@ if (btnAddProduct) {
 
 if (closeAddModal) {
     closeAddModal.addEventListener('click', () => {
+        // Reset form
+        if (addProductForm) addProductForm.reset();
+
+        // Clear uploaded images
+        uploadedImagesList = [];
+
+        // Clear image preview container
+        const previewContainer = document.getElementById('image-preview-container');
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+        }
+
+        // Close modal
         addProductModal.classList.remove('open');
     });
 }
