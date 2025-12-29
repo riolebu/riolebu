@@ -459,7 +459,7 @@ window.changeUserPassword = async (docId) => {
     }
 };
 
-window.changeUserRole = async (docId) => {
+window.changeUserRole = (docId) => {
     const user = adminUsers.find(u => u.docId === docId);
     if (!user) return;
 
@@ -468,24 +468,47 @@ window.changeUserRole = async (docId) => {
         return;
     }
 
-    const newRole = prompt(`Cambiar rol para ${user.name}\nRoles disponibles: admin, sales, sales_inventory\nActual: ${user.role}`, user.role);
+    // Populate modal
+    document.getElementById('change-role-userid').value = docId;
+    document.getElementById('change-role-username').value = user.name;
+    document.getElementById('change-role-select').value = user.role;
 
-    if (newRole === null) return;
-
-    const validRoles = ['admin', 'sales', 'sales_inventory'];
-    if (!validRoles.includes(newRole.toLowerCase())) {
-        alert("Rol inválido. Los roles permitidos son: admin, sales, sales_inventory");
-        return;
-    }
-
-    try {
-        await updateDoc(doc(db, 'users', docId), { role: newRole.toLowerCase() });
-        alert("Rol actualizado correctamente.");
-        // renderUsers se llamará automáticamente por el onSnapshot
-    } catch (e) {
-        alert("Error al actualizar rol: " + e.message);
-    }
+    document.getElementById('change-role-modal').classList.add('open');
 };
+
+// Event Listeners for Role Modal
+const roleModal = document.getElementById('change-role-modal');
+const closeRoleModal = document.getElementById('close-role-modal');
+const roleForm = document.getElementById('change-role-form');
+
+if (closeRoleModal) {
+    closeRoleModal.addEventListener('click', () => {
+        roleModal.classList.remove('open');
+    });
+}
+
+if (roleForm) {
+    roleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const docId = document.getElementById('change-role-userid').value;
+        const newRole = document.getElementById('change-role-select').value;
+
+        try {
+            await updateDoc(doc(db, 'users', docId), { role: newRole });
+            alert("Rol actualizado correctamente.");
+            roleModal.classList.remove('open');
+        } catch (e) {
+            alert("Error al actualizar rol: " + e.message);
+        }
+    });
+}
+
+// Close on click outside
+window.addEventListener('click', (e) => {
+    if (e.target === roleModal) {
+        roleModal.classList.remove('open');
+    }
+});
 
 
 /* --- POS Module --- */

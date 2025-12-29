@@ -536,6 +536,33 @@
         </div>
     </div>
 
+    <!-- Change Role Modal -->
+    <div id="change-role-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Cambiar Rol de Usuario</h3>
+                <button class="close-modal" id="close-role-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="change-role-form">
+                <input type="hidden" id="change-role-userid">
+                <div class="form-group">
+                    <label>Nombre del Usuario</label>
+                    <input type="text" id="change-role-username" readonly style="background-color: #f1f1f1;">
+                </div>
+                <div class="form-group">
+                    <label>Nuevo Rol</label>
+                    <select id="change-role-select" required>
+                        <option value="admin">Administrador</option>
+                        <option value="sales">Venta</option>
+                        <option value="sales_inventory">Venta e Inventario</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary-modal" style="width: 100%; margin-top: 15px;">Actualizar
+                    Rol</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module" src="assets/js/admin.js"></script>
 </body>
 
