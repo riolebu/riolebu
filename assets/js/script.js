@@ -181,6 +181,27 @@ const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(price);
 };
 
+const getCategoryLabel = (cat) => {
+    const labels = {
+        'maquinaria': 'Maquinaria',
+        'motores': 'Motores',
+        'motores:electricos': 'Motores Eléctricos',
+        'motores:combustion': 'Motores Combustión',
+        'desarmaduria:motores_combustion': 'Desarmaduría: Motores Combustión',
+        'desarmaduria:excavadora': 'Desarmaduría: Máquina Excavadora',
+        'desarmaduria:hidraulica': 'Desarmaduría: Máquina Hidráulica',
+        'desarmaduria:chevrolet': 'Desarmaduría: Camión Chevrolet',
+        'desarmaduria:scania': 'Desarmaduría: Camión Scania',
+        'desarmaduria:caterpillar': 'Desarmaduría: Camión Caterpillar',
+        'desarmaduria:renault': 'Desarmaduría: Camión Renault',
+        'equipos': 'Equipos',
+        'generadores': 'Generadores',
+        'herramientas': 'Herramientas',
+        'seguridad': 'Seguridad'
+    };
+    return labels[cat] || cat;
+};
+
 // Render Products
 // Render Products
 // Render Products
@@ -204,7 +225,11 @@ const renderProducts = (category = 'all', searchTerm = '') => {
         if (category === 'featured') {
             filteredProducts = filteredProducts.filter(p => p.featured === true);
         } else if (category !== 'all') {
-            filteredProducts = filteredProducts.filter(p => p.category === category || (category === 'materiales' && p.category !== 'herramientas' && p.category !== 'aridos' && p.category !== 'jardin'));
+            filteredProducts = filteredProducts.filter(p =>
+                p.category === category ||
+                p.category.startsWith(category + ':') ||
+                (category === 'materiales' && p.category !== 'herramientas' && p.category !== 'aridos' && p.category !== 'jardin')
+            );
         } else if (!searchTerm) {
             filteredProducts = filteredProducts.filter(p => p.category !== 'aridos');
         }
@@ -250,7 +275,7 @@ const renderProducts = (category = 'all', searchTerm = '') => {
                     ` : ''}
                 </div>
                 <div class="product-info">
-                    <span class="product-cat">${product.category}</span>
+                    <span class="product-cat">${getCategoryLabel(product.category)}</span>
                     <h3 class="product-title">${product.name}</h3>
                     <div class="product-price">
                         <span class="current-price">${formatPrice(product.price)}</span>

@@ -517,6 +517,27 @@ const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(price);
 };
 
+const getCategoryLabel = (cat) => {
+    const labels = {
+        'maquinaria': 'Maquinaria',
+        'motores': 'Motores',
+        'motores:electricos': 'Motores Eléctricos',
+        'motores:combustion': 'Motores Combustión',
+        'desarmaduria:motores_combustion': 'Desarmaduría: Motores Combustión',
+        'desarmaduria:excavadora': 'Desarmaduría: Máquina Excavadora',
+        'desarmaduria:hidraulica': 'Desarmaduría: Máquina Hidráulica',
+        'desarmaduria:chevrolet': 'Desarmaduría: Camión Chevrolet',
+        'desarmaduria:scania': 'Desarmaduría: Camión Scania',
+        'desarmaduria:caterpillar': 'Desarmaduría: Camión Caterpillar',
+        'desarmaduria:renault': 'Desarmaduría: Camión Renault',
+        'equipos': 'Equipos',
+        'generadores': 'Generadores',
+        'herramientas': 'Herramientas',
+        'seguridad': 'Seguridad'
+    };
+    return labels[cat] || cat;
+};
+
 // Add to Cart Logic
 const addToPosCart = (term) => {
     // Try find by ID first, then loose match by name
@@ -935,7 +956,7 @@ const renderInventory = () => {
         row.innerHTML = `
             <td>${p.id}</td>
             <td>${p.name} ${isInactive ? '(Inactivo)' : ''}</td>
-            <td>${p.category}</td>
+            <td>${getCategoryLabel(p.category)}</td>
             <td>${formatPrice(p.price)}</td>
             <td style="${p.stock <= 5 ? 'color: var(--admin-danger); font-weight: bold;' : ''}">${p.stock}</td>
             <td>
