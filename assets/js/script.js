@@ -847,7 +847,7 @@ window.submitOrder = () => {
         return;
     }
 
-    const phoneNumber = "56978589090";
+    const phoneNumber = "56984630759";
     let message = `Hola *Rio Lebu Maquinaria*, soy *${name}*.\nMe gustaría realizar el siguiente pedido con despacho a: *${address}*.\n\n`;
 
     let total = 0;
