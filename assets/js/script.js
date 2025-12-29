@@ -313,9 +313,79 @@ const renderProducts = (category = 'all', searchTerm = '') => {
 window.renderProducts = renderProducts; // Assign to window at end of definition
 
 // Add to Cart Function
+window.addToCart = (productId, buttonElement) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
 
+    // Get quantity from the card
+    const card = buttonElement.closest('.product-card');
+    const qtyInput = card.querySelector('.qty-input');
+    const qty = parseInt(qtyInput.value) || 1;
 
+    // Check stock availability
+    if (qty > product.stock) {
+        alert(`Lo sentimos, solo hay ${product.stock} unidades disponibles de este producto.`);
+        return;
+    }
 
+    // Check if product already exists in cart
+    const existingItem = cart.find(item => item.id === productId);
+
+    if (existingItem) {
+        // Check if adding more would exceed stock
+        if (existingItem.qty + qty > product.stock) {
+            alert(`No puedes agregar más unidades. Stock disponible: ${product.stock}, ya tienes ${existingItem.qty} en el carrito.`);
+            return;
+        }
+        existingItem.qty += qty;
+    } else {
+        cart.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            qty: qty,
+            stock: product.stock
+        });
+    }
+
+    saveCart();
+    updateCartCount();
+
+    // Visual feedback
+    buttonElement.innerHTML = '<i class="fa-solid fa-check"></i> Agregado';
+    buttonElement.style.backgroundColor = '#28a745';
+
+    setTimeout(() => {
+        buttonElement.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Agregar';
+        buttonElement.style.backgroundColor = '';
+    }, 1500);
+
+    // Reset quantity to 1
+    qtyInput.value = 1;
+};
+
+// Adjust quantity in product card
+window.adjustCardQty = (button, change) => {
+    const qtyInput = button.closest('.qty-selector').querySelector('.qty-input');
+    let currentQty = parseInt(qtyInput.value) || 1;
+    let newQty = currentQty + change;
+
+    if (newQty < 1) newQty = 1;
+
+    qtyInput.value = newQty;
+};
+
+// Update cart count badge
+const updateCartCount = () => {
+    if (cartCountElement) {
+        const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+        cartCountElement.textContent = totalItems;
+    }
+};
+
+// Initialize cart count on page load
+updateCartCount();
 
 
 // Event Listeners for Filters
