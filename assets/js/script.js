@@ -1006,11 +1006,45 @@ if (checkoutBtn) {
     });
 }
 
-/* AUTH LOGIC */
-window.handleRegister = (e) => {
+const migrateOldUsers = async () => {
+    const oldUsers = JSON.parse(localStorage.getItem('mariomari_users'));
+    if (!oldUsers || !Array.isArray(oldUsers) || oldUsers.length === 0) return;
+
+    console.log(`DEBUG: Iniciando migración de ${oldUsers.length} usuarios antiguos a Firestore...`);
+
+    for (const user of oldUsers) {
+        try {
+            // Check if already in Firestore
+            const snapshot = await db.collection('users').where('email', '==', user.email.toLowerCase()).get();
+            if (snapshot.empty) {
+                console.log(`DEBUG: Migrando usuario: ${user.email}`);
+                await db.collection('users').add({
+                    name: user.name,
+                    email: user.email.toLowerCase(),
+                    password: user.password,
+                    role: 'customer',
+                    status: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    migrated: true
+                });
+            }
+        } catch (err) {
+            console.error(`Error migrando usuario ${user.email}:`, err);
+        }
+    }
+
+    // Once migrated, clear the old key or mark it to avoid repeated heavy checks
+    localStorage.removeItem('mariomari_users');
+    console.log("DEBUG: Migración completada y datos locales antiguos removidos.");
+};
+
+
+
+/* AUTH LOGIC - Updated to Firestore for Persistence */
+window.handleRegister = async (e) => {
     e.preventDefault();
-    const name = document.getElementById('reg-name').value;
-    const email = document.getElementById('reg-email').value;
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim().toLowerCase();
     const password = document.getElementById('reg-password').value;
     const confirmPassword = document.getElementById('reg-confirm-password').value;
 
@@ -1019,38 +1053,73 @@ window.handleRegister = (e) => {
         return;
     }
 
-    let users = JSON.parse(localStorage.getItem('mariomari_users')) || [];
-
-    // Check if email exists
-    if (users.find(u => u.email === email)) {
-        alert('Este correo ya está registrado.');
+    if (password.length < 6) {
+        alert('La contraseña debe tener al menos 6 caracteres.');
         return;
     }
 
-    const newUser = { name, email, password }; // Note: In production never store passwords in plain text!
-    users.push(newUser);
-    localStorage.setItem('mariomari_users', JSON.stringify(users));
+    try {
+        console.log("DEBUG: Intentando registrar usuario en Firestore:", email);
+        // Check if user already exists in Firestore
+        const snapshot = await db.collection('users').where('email', '==', email).get();
+        if (!snapshot.empty) {
+            alert('Este correo ya está registrado.');
+            return;
+        }
 
-    alert('Registro exitoso. Ahora puedes iniciar sesión.');
-    switchTab('login');
+        // Add new user to Firestore
+        await db.collection('users').add({
+            name: name,
+            email: email,
+            password: password, // Note: In production, use Firebase Auth or hash passwords
+            role: 'customer',
+            status: 'active',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert('Registro exitoso. Ahora puedes iniciar sesión.');
+        if (typeof switchTab === 'function') switchTab('login');
+    } catch (error) {
+        console.error("Error en registro:", error);
+        alert('Error de conexión con la base de datos al registrar: ' + error.message);
+    }
 };
 
-window.handleLogin = (e) => {
+window.handleLogin = async (e) => {
     e.preventDefault();
-    const email = document.getElementById('login-email').value;
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
     const password = document.getElementById('login-password').value;
 
-    let users = JSON.parse(localStorage.getItem('mariomari_users')) || [];
-    const user = users.find(u => u.email === email && u.password === password);
+    try {
+        console.log("DEBUG: Intentando login en Firestore para:", email);
+        // Query Firestore for user
+        const snapshot = await db.collection('users')
+            .where('email', '==', email)
+            .where('password', '==', password)
+            .where('status', '==', 'active')
+            .get();
 
-    if (user) {
-        // Login success
-        const sessionUser = { name: user.name, email: user.email };
-        localStorage.setItem('mariomari_currentUser', JSON.stringify(sessionUser));
-        alert(`Bienvenido, ${user.name}!`);
-        window.location.href = 'index.html';
-    } else {
-        alert('Correo o contraseña incorrectos.');
+        if (!snapshot.empty) {
+            const userDoc = snapshot.docs[0];
+            const userData = userDoc.data();
+
+            // Login success
+            const sessionUser = {
+                id: userDoc.id,
+                name: userData.name,
+                email: userData.email,
+                role: userData.role || 'customer'
+            };
+
+            localStorage.setItem('mariomari_currentUser', JSON.stringify(sessionUser));
+            alert(`¡Bienvenido, ${userData.name}!`);
+            window.location.href = 'index.html';
+        } else {
+            alert('Correo o contraseña incorrectos, o usuario inactivo.');
+        }
+    } catch (error) {
+        console.error("Error en login:", error);
+        alert('Error al conectar con la base de datos: ' + error.message);
     }
 };
 
@@ -1081,8 +1150,7 @@ const checkSession = () => {
     }
 };
 
-// Run check session on load
-checkSession();
+
 
 /* --- Hero Slider Logic --- */
 const initHeroSlider = () => {
@@ -1150,18 +1218,21 @@ const initHeroSlider = () => {
     startAutoSlide();
 };
 
-// Initialize Slider
-initHeroSlider();
+// Consolidated Initialization
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log("DEBUG: Rio Lebu system initializing...");
 
-// Initial render with defaults
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("DEBUG: DOMContentLoaded, performing initial render");
+    // 1. Initial renders
     renderProducts();
     if (typeof renderAridosProducts === 'function') renderAridosProducts();
-});
+    initHeroSlider();
 
-// Also trigger immediate render just in case DOM is already ready
-renderProducts();
+    // 2. Auth & Sessions
+    checkSession();
+
+    // 3. Migration (Wait a bit for Firebase to be ready)
+    setTimeout(migrateOldUsers, 1500);
+});
 
 // Show Product Observations
 window.showProductObservations = (productId) => {

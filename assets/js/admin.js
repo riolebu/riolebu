@@ -1,5 +1,8 @@
-import { db, storage } from './firebase-config.js';
-import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+// Firebase and Firestore are now available globally via window.db (Compat SDK)
+const db = window.db;
+const storage = window.storage;
+// logDebug helper defined below
+
 // Firebase Storage no es necesario - imágenes guardadas como base64 en Firestore
 
 const ADMIN_PASS = "admin123";
@@ -40,8 +43,8 @@ let currentSortField = 'id';
 let currentSortOrder = 'asc';
 
 // Firestore Listeners
-const productsRef = collection(db, 'products');
-onSnapshot(productsRef, (snapshot) => {
+const productsRef = db.collection('products');
+productsRef.onSnapshot((snapshot) => {
     products = snapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
@@ -52,9 +55,8 @@ onSnapshot(productsRef, (snapshot) => {
     if (typeof updateProductSuggestions === 'function') updateProductSuggestions();
 });
 
-const movementsRef = collection(db, 'movements');
-const movementsQuery = query(movementsRef, orderBy('id', 'desc'));
-onSnapshot(movementsQuery, (snapshot) => {
+const movementsRef = db.collection('movements');
+movementsRef.orderBy('id', 'desc').onSnapshot((snapshot) => {
     movementsHistory = snapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
@@ -71,15 +73,15 @@ onSnapshot(movementsQuery, (snapshot) => {
 
 // Settings Listener (Folio)
 let posSettings = { currentFolio: 1000 };
-const settingsRef = collection(db, 'settings');
-onSnapshot(settingsRef, (snapshot) => {
+const settingsRef = db.collection('settings');
+settingsRef.onSnapshot((snapshot) => {
     const configDoc = snapshot.docs.find(d => d.id === 'pos_config');
     if (configDoc) {
         posSettings = configDoc.data();
         updateFolioDisplay();
     } else {
         // Initialize if not exists
-        setDoc(doc(db, 'settings', 'pos_config'), { currentFolio: 1000 });
+        db.collection('settings').doc('pos_config').set({ currentFolio: 1000 });
     }
 });
 
@@ -89,10 +91,10 @@ const updateFolioDisplay = () => {
 };
 
 // Users Listener and Initialization
-const usersRef = collection(db, 'users');
+const usersRef = db.collection('users');
 logDebug("Conectando a colección 'users'...");
 
-onSnapshot(usersRef, async (snapshot) => {
+usersRef.onSnapshot(async (snapshot) => {
     logDebug(`Snapshot recibido. Docs: ${snapshot.docs.length}`);
     adminUsers = snapshot.docs.map(doc => ({
         docId: doc.id,
@@ -115,7 +117,7 @@ onSnapshot(usersRef, async (snapshot) => {
             status: 'active'
         };
         try {
-            await addDoc(usersRef, masterAdmin);
+            await db.collection('users').add(masterAdmin);
             logDebug("Master Admin creado exitosamente.");
         } catch (err) {
             logDebug(`ERROR al crear Master Admin: ${err.message}`);
@@ -124,7 +126,8 @@ onSnapshot(usersRef, async (snapshot) => {
     }
 
     populateUserSelect();
-    logDebug("Select actualizado.");
+    if (itemActiveTab === 'users') renderUsers();
+    logDebug("Select y Tabla de Usuarios actualizados.");
 
 }, (error) => {
     const msg = `ERROR CRÍTICO: No se puede conectar con la base de datos.\n${error.message}\n\nPor favor, verifica tu conexión o las reglas de Firebase.`;
@@ -176,13 +179,16 @@ const populateUserSelect = () => {
     const select = document.getElementById('admin-user-select');
     if (!select) return;
 
-    // Clear except first option
-    select.innerHTML = '<option value="" disabled selected>Seleccione Usuario</option>';
+    const statusMsg = document.getElementById('admin-db-status');
+    if (adminUsers.length > 0) {
+        if (statusMsg) statusMsg.innerHTML = '<i class="fa-solid fa-check-circle" style="color: green;"></i> Base de Datos Conectada';
+        select.innerHTML = '<option value="" disabled selected>Seleccione Usuario</option>';
+    } else {
+        if (statusMsg) statusMsg.innerHTML = '<i class="fa-solid fa-exclamation-triangle" style="color: orange;"></i> No se encontraron usuarios';
+        select.innerHTML = '<option value="" disabled selected>Sin usuarios - Use Restaurar Acceso</option>';
+    }
 
     const activeUsers = adminUsers.filter(u => u.status === 'active');
-    if (activeUsers.length === 0 && adminUsers.length > 0) {
-        alert("Alerta: Hay usuarios pero ninguno tiene status='active'");
-    }
 
     activeUsers.forEach(user => {
         const option = document.createElement('option');
@@ -190,6 +196,38 @@ const populateUserSelect = () => {
         option.textContent = `${user.name} (${user.role.toUpperCase()})`;
         select.appendChild(option);
     });
+};
+
+// Global function to restore master admin if lost
+window.forceResetAdmin = async () => {
+    const confirmMsg = "Esto recreará el usuario 'admin@mariomari.cl' con la contraseña 'admin'. ¿Deseas continuar?";
+    if (!confirm(confirmMsg)) return;
+
+    const statusMsg = document.getElementById('admin-db-status');
+    if (statusMsg) statusMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Restaurando Acceso...';
+
+    const masterAdmin = {
+        name: 'Administrador Master',
+        email: 'admin@mariomari.cl',
+        password: 'admin',
+        role: 'admin',
+        status: 'active',
+        createdAt: new Date().toISOString()
+    };
+
+    try {
+        const snapshot = await db.collection('users').where('email', '==', masterAdmin.email).get();
+        if (!snapshot.empty) {
+            await db.collection('users').doc(snapshot.docs[0].id).update(masterAdmin);
+        } else {
+            await db.collection('users').add(masterAdmin);
+        }
+        alert("Administrador Maestro restaurado.\nCorreo: admin@mariomari.cl\nContraseña: admin");
+        window.location.reload();
+    } catch (e) {
+        alert("Error al restaurar: " + e.message);
+        if (statusMsg) statusMsg.innerHTML = '<i class="fa-solid fa-times-circle" style="color: red;"></i> Error al conectar';
+    }
 };
 
 loginForm.addEventListener('submit', (e) => {
@@ -395,7 +433,7 @@ if (btnAddUser && modalAddUser) {
                 return;
             }
 
-            await addDoc(collection(db, 'users'), {
+            await db.collection('users').add({
                 name,
                 email,
                 password,
@@ -413,7 +451,7 @@ if (btnAddUser && modalAddUser) {
 window.toggleUserStatus = async (docId, newStatus) => {
     if (!confirm(`¿Cambiar estado de usuario a ${newStatus}?`)) return;
     try {
-        await updateDoc(doc(db, 'users', docId), { status: newStatus });
+        await db.collection('users').doc(docId).update({ status: newStatus });
     } catch (e) {
         alert("Error: " + e.message);
     }
@@ -427,10 +465,9 @@ window.changeUserPassword = async (docId) => {
     // Verify against current session user first (to avoid extra reads, though DB read is safer)
     // We'll read from DB to be sure
     try {
-        const userRef = doc(db, 'users', docId);
-        const userSnap = await getDoc(userRef);
+        const userSnap = await db.collection('users').doc(docId).get();
 
-        if (!userSnap.exists()) {
+        if (!userSnap.exists) {
             alert("Usuario no encontrado.");
             return;
         }
@@ -450,7 +487,7 @@ window.changeUserPassword = async (docId) => {
             return;
         }
 
-        await updateDoc(userRef, { password: newPass });
+        await db.collection('users').doc(docId).update({ password: newPass });
         alert("Contraseña actualizada correctamente. Por favor inicie sesión nuevamente.");
 
         const logoutBtn = document.getElementById('logout-btn');
@@ -496,7 +533,7 @@ if (roleForm) {
         const newRole = document.getElementById('change-role-select').value;
 
         try {
-            await updateDoc(doc(db, 'users', docId), { role: newRole });
+            await db.collection('users').doc(docId).update({ role: newRole });
             alert("Rol actualizado correctamente.");
             roleModal.classList.remove('open');
         } catch (e) {
@@ -701,8 +738,7 @@ posCheckoutBtn.addEventListener('click', async () => {
     cart.forEach(async item => {
         const product = products.find(p => p.id === item.id);
         if (product && product.docId) {
-            const prodRef = doc(db, 'products', product.docId);
-            await updateDoc(prodRef, {
+            await db.collection('products').doc(product.docId).update({
                 stock: product.stock - item.qty
             });
         }
@@ -718,7 +754,7 @@ posCheckoutBtn.addEventListener('click', async () => {
         try {
             // Save or Update Client
             // Use RUT as ID for easy lookup
-            await setDoc(doc(db, 'clients', cliRut), {
+            await db.collection('clients').doc(cliRut).set({
                 rut: cliRut,
                 name: cliName,
                 giro: cliGiro,
@@ -888,7 +924,7 @@ const generateDTE = async () => {
 
     // Increment Folio in Firestore
     try {
-        await updateDoc(doc(db, 'settings', 'pos_config'), {
+        await db.collection('settings').doc('pos_config').update({
             currentFolio: Number(dteNumber) + 1
         });
     } catch (e) {
@@ -913,7 +949,7 @@ const recordMovement = async (data) => {
         total: data.total || 0,
         seller: data.seller || "Sistema"
     };
-    await addDoc(collection(db, 'movements'), entry);
+    await db.collection('movements').add(entry);
 };
 
 window.closeDteModal = () => {
@@ -997,8 +1033,7 @@ window.toggleFeatured = async (id) => {
     if (!product || !product.docId) return;
 
     try {
-        const prodRef = doc(db, 'products', product.docId);
-        await updateDoc(prodRef, {
+        await db.collection('products').doc(product.docId).update({
             featured: !product.featured
         });
     } catch (err) {
@@ -1014,8 +1049,7 @@ window.toggleProductStatus = async (id, newStatus) => {
         return;
     }
     try {
-        const prodRef = doc(db, 'products', product.docId);
-        await updateDoc(prodRef, { status: newStatus });
+        await db.collection('products').doc(product.docId).update({ status: newStatus });
         // No need to alert, UI updates via snapshot
     } catch (err) {
         alert("Error al actualizar estado: " + err.message);
@@ -1141,7 +1175,7 @@ if (btnEditFolio) {
             const folioNum = parseInt(newFolio);
             if (!isNaN(folioNum) && folioNum > 0) {
                 try {
-                    await updateDoc(doc(db, 'settings', 'pos_config'), {
+                    await db.collection('settings').doc('pos_config').update({
                         currentFolio: folioNum
                     });
                 } catch (e) {
@@ -1224,8 +1258,7 @@ if (editProductForm) {
         }
 
         try {
-            const prodRef = doc(db, 'products', docId);
-            await updateDoc(prodRef, updateData);
+            await db.collection('products').doc(docId).update(updateData);
             alert('Producto actualizado correctamente');
             editProductModal.classList.remove('open');
         } catch (err) {
@@ -1423,7 +1456,7 @@ if (addProductForm) {
 
         try {
             console.log(`[SAVE] Guardando producto en Firestore...`, newProduct);
-            await addDoc(collection(db, 'products'), newProduct);
+            await db.collection('products').add(newProduct);
 
             console.log(`[SAVE] Registrando movimiento de inventario...`);
             await recordMovement({
@@ -1568,10 +1601,16 @@ if (stockForm) {
             });
         }
 
-        localStorage.setItem('mariomari_products_v4', JSON.stringify(products));
-        alert('Stock actualizado correctamente.');
-        stockModal.classList.remove('open');
-        renderInventory();
+        // Update stock in Firestore
+        db.collection('products').doc(product.docId).update({
+            stock: product.stock
+        }).then(() => {
+            alert('Stock actualizado correctamente.');
+            stockModal.classList.remove('open');
+            renderInventory();
+        }).catch(err => {
+            alert('Error al actualizar stock: ' + err.message);
+        });
     });
 }
 
@@ -1870,7 +1909,7 @@ window.changeUserPassword = async (docId) => {
     if (newPass.length < 6) { alert("Mínimo 6 caracteres."); return; }
 
     try {
-        await updateDoc(doc(db, 'users', docId), { password: newPass });
+        await db.collection('users').doc(docId).update({ password: newPass });
         alert("Contraseña actualizada.");
         if (isSelf) { document.getElementById('logout-btn').click(); }
     } catch (e) { alert("Error: " + e.message); }
@@ -1997,8 +2036,7 @@ if (saveImagesBtn) {
             saveImagesBtn.disabled = true;
             saveImagesBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
 
-            const prodRef = doc(db, 'products', currentEditingProduct.docId);
-            await updateDoc(prodRef, {
+            await db.collection('products').doc(currentEditingProduct.docId).update({
                 image: allImages[0],
                 images: allImages
             });
