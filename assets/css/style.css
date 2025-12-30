@@ -1614,3 +1614,85 @@ img {
         text-align: center;
     }
 }
+
+/* Observations Modal */
+.obs-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.obs-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideDown 0.3s ease;
+}
+
+.obs-modal-header {
+    margin: 0 0 20px 0;
+    color: var(--secondary);
+    font-size: 1.5rem;
+    padding-right: 30px;
+}
+
+.obs-modal-header i {
+    color: var(--primary);
+    margin-right: 10px;
+}
+
+.obs-modal-body {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-wrap;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.obs-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s;
+}
+
+.obs-modal-close:hover {
+    color: var(--primary);
+}
+
+@media (max-width: 600px) {
+    .obs-modal-content {
+        padding: 20px;
+        width: 95%;
+    }
+
+    .obs-modal-header {
+        font-size: 1.2rem;
+    }
+
+    .obs-modal-body {
+        padding: 15px;
+        font-size: 0.95rem;
+    }
+}

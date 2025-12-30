@@ -1177,62 +1177,21 @@ window.showProductObservations = (productId) => {
 
     // Create modal overlay
     const modalOverlay = document.createElement('div');
-    modalOverlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        animation: fadeIn 0.3s ease;
-    `;
+    modalOverlay.className = 'obs-modal-overlay';
 
     // Create modal content
     const modalContent = document.createElement('div');
-    modalContent.style.cssText = `
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        position: relative;
-        animation: slideDown 0.3s ease;
-    `;
+    modalContent.className = 'obs-modal-content';
 
     modalContent.innerHTML = `
-        <button onclick="this.closest('[style*=\\'position: fixed\\']').remove()" style="
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: transparent;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            transition: color 0.3s;
-        " onmouseover="this.style.color='#f37021'" onmouseout="this.style.color='#666'">
+        <button class="obs-modal-close" onclick="this.closest('.obs-modal-overlay').remove()">
             <i class="fa-solid fa-xmark"></i>
         </button>
-        <h3 style="margin: 0 0 20px 0; color: #0a192f; font-size: 1.5rem; padding-right: 30px;">
-            <i class="fa-solid fa-info-circle" style="color: #f37021; margin-right: 10px;"></i>
+        <h3 class="obs-modal-header">
+            <i class="fa-solid fa-info-circle"></i>
             ${product.name}
         </h3>
-        <div style="
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #f37021;
-            line-height: 1.6;
-            color: #333;
-            white-space: pre-wrap;
-            max-height: 300px;
-            overflow-y: auto;
-        ">
+        <div class="obs-modal-body">
             ${observations}
         </div>
     `;
