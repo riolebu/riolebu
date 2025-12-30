@@ -1187,6 +1187,18 @@ img {
         gap: 10px;
     }
 
+    .filters {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
+        margin-bottom: 30px;
+    }
+
+    .filter-btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+
     .products-grid {
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
         gap: 15px;
