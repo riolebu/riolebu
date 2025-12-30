@@ -10,9 +10,9 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK - Compact Version (Supports file://) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-storage-compat.js"></script>
     <script src="assets/js/firebase-config.js"></script>
 
     <!-- Main Style -->
@@ -315,10 +315,14 @@
                 </div>
                 <input type="password" id="admin-password" placeholder="Contraseña" required>
                 <button type="submit">Ingresar</button>
-                <div style="margin-top: 15px; text-align: center;">
+                <div style="margin-top: 15px; text-align: center; display: flex; justify-content: center; gap: 15px;">
+                    <a href="#" onclick="window.location.reload()"
+                        style="font-size: 0.8rem; color: #2196F3; text-decoration: none;">
+                        <i class="fa-solid fa-rotate-right"></i> Recargar
+                    </a>
                     <a href="#" onclick="forceResetAdmin()"
                         style="font-size: 0.8rem; color: var(--admin-primary); text-decoration: none;">
-                        <i class="fa-solid fa-user-shield"></i> ¿No ves usuarios? Restaurar Acceso
+                        <i class="fa-solid fa-user-shield"></i> Restaurar Acceso
                     </a>
                 </div>
             </form>

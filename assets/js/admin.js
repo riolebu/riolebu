@@ -94,45 +94,69 @@ const updateFolioDisplay = () => {
 const usersRef = db.collection('users');
 logDebug("Conectando a colección 'users'...");
 
+const updateStatus = (msg, color = 'green') => {
+    const statusMsg = document.getElementById('admin-db-status');
+    if (statusMsg) {
+        statusMsg.innerHTML = `<i class="fa-solid fa-circle-${color === 'green' ? 'check' : 'exclamation'}" style="color: ${color};"></i> ${msg}`;
+    }
+    logDebug(`STATUS: ${msg}`);
+};
+
 usersRef.onSnapshot(async (snapshot) => {
     logDebug(`Snapshot recibido. Docs: ${snapshot.docs.length}`);
+    updateStatus(`Conectado. Usuarios: ${snapshot.docs.length}`, 'green');
+    
     adminUsers = snapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
     }));
 
-    logDebug(`Usuarios procesados: ${adminUsers.length}`);
-
     // Ensure Master Admin exists
     const masterEmail = 'admin@mariomari.cl';
+    // Check both local adminUsers array AND the snapshot to be sure
     const masterUser = adminUsers.find(u => u.email === masterEmail);
 
-    if (!masterUser) {
-        logDebug("Master Admin no encontrado. Creando...");
+    if (adminUsers.length === 0 || !masterUser) {
+        logDebug("Master Admin no encontrado o base vacía. Intentando crear...");
+        updateStatus("Creando usuario administrador...", 'orange');
+        
         const masterAdmin = {
             name: 'Administrador Master',
             email: masterEmail,
             password: 'admin',
             role: 'admin',
-            status: 'active'
+            status: 'active',
+            createdAt: new Date().toISOString()
         };
+
         try {
-            await db.collection('users').add(masterAdmin);
-            logDebug("Master Admin creado exitosamente.");
+            // Check existence one last time with a direct get to avoid race conditions
+            const q = await db.collection('users').where('email', '==', masterEmail).get();
+            if (q.empty) {
+                 await db.collection('users').add(masterAdmin);
+                 logDebug("Master Admin creado exitosamente.");
+            } else {
+                logDebug("Master Admin ya existía (race condition avoided).");
+            }
         } catch (err) {
             logDebug(`ERROR al crear Master Admin: ${err.message}`);
+            updateStatus(`Error creación: ${err.message}`, 'red');
             console.error("Error auto-initializing admin:", err);
         }
     }
 
     populateUserSelect();
     if (itemActiveTab === 'users') renderUsers();
-    logDebug("Select y Tabla de Usuarios actualizados.");
 
 }, (error) => {
-    const msg = `ERROR CRÍTICO: No se puede conectar con la base de datos.\n${error.message}\n\nPor favor, verifica tu conexión o las reglas de Firebase.`;
-    alert(msg);
+    const msg = `Error DB: ${error.message}`;
+    updateStatus(msg, 'red');
     console.error("Error listening to users:", error);
+    
+    const select = document.getElementById('admin-user-select');
+    if (select) {
+        select.innerHTML = `<option disabled selected>Error de Conexión</option>`;
+    }
 });
 
 let itemActiveTab = 'pos';
