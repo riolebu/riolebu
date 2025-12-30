@@ -1,6 +1,7 @@
 // Firebase and Firestore are now available globally via window.db (Compat SDK)
-const db = window.db;
-const storage = window.storage;
+// db and storage are already declared in firebase-config.js, so we use them directly.
+// const db = window.db; // REMOVED to avoid "Identifier 'db' has already been declared"
+// const storage = window.storage; // REMOVED
 // logDebug helper defined below
 
 // Firebase Storage no es necesario - imágenes guardadas como base64 en Firestore
@@ -105,7 +106,7 @@ const updateStatus = (msg, color = 'green') => {
 usersRef.onSnapshot(async (snapshot) => {
     logDebug(`Snapshot recibido. Docs: ${snapshot.docs.length}`);
     updateStatus(`Conectado. Usuarios: ${snapshot.docs.length}`, 'green');
-    
+
     adminUsers = snapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
@@ -119,7 +120,7 @@ usersRef.onSnapshot(async (snapshot) => {
     if (adminUsers.length === 0 || !masterUser) {
         logDebug("Master Admin no encontrado o base vacía. Intentando crear...");
         updateStatus("Creando usuario administrador...", 'orange');
-        
+
         const masterAdmin = {
             name: 'Administrador Master',
             email: masterEmail,
@@ -133,8 +134,8 @@ usersRef.onSnapshot(async (snapshot) => {
             // Check existence one last time with a direct get to avoid race conditions
             const q = await db.collection('users').where('email', '==', masterEmail).get();
             if (q.empty) {
-                 await db.collection('users').add(masterAdmin);
-                 logDebug("Master Admin creado exitosamente.");
+                await db.collection('users').add(masterAdmin);
+                logDebug("Master Admin creado exitosamente.");
             } else {
                 logDebug("Master Admin ya existía (race condition avoided).");
             }
@@ -152,7 +153,7 @@ usersRef.onSnapshot(async (snapshot) => {
     const msg = `Error DB: ${error.message}`;
     updateStatus(msg, 'red');
     console.error("Error listening to users:", error);
-    
+
     const select = document.getElementById('admin-user-select');
     if (select) {
         select.innerHTML = `<option disabled selected>Error de Conexión</option>`;
