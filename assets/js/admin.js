@@ -597,7 +597,8 @@ const getCategoryLabel = (cat) => {
         'equipos': 'Equipos',
         'generadores': 'Generadores',
         'herramientas': 'Herramientas',
-        'seguridad': 'Seguridad'
+        'seguridad': 'Seguridad',
+        'bienes_raices': 'Bienes Raíces'
     };
     return labels[cat] || cat;
 };

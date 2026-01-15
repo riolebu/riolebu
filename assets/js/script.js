@@ -208,7 +208,8 @@ const getCategoryLabel = (cat) => {
         'equipos': 'Equipos',
         'generadores': 'Generadores',
         'herramientas': 'Herramientas',
-        'seguridad': 'Seguridad'
+        'seguridad': 'Seguridad',
+        'bienes_raices': 'Bienes Raíces'
     };
     return labels[cat] || cat;
 };
@@ -582,6 +583,7 @@ navLinks.forEach(link => {
             else if (text.includes('generadores')) category = 'generadores';
             else if (text.includes('herramientas')) category = 'herramientas';
             else if (text.includes('seguridad')) category = 'seguridad';
+            else if (text.includes('bienes raíces') || text.includes('bienes raices')) category = 'bienes_raices';
             else if (text.includes('repuestos')) category = 'aridos';
             else if (text.includes('ofertas del mes')) category = 'featured';
             else category = 'all';
