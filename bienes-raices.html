@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienes Raíces - Rio Lebu</title>
+    <title>Terrenos a Orillas de Lago - Rio Lebu</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,102 +21,85 @@
 
     <style>
         .re-hero {
-            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('assets/images/hero/real_estate_luxury_hero.jpg');
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('assets/images/hero/lakefront_hero.jpg');
             background-size: cover;
             background-position: center;
             color: var(--white);
-            padding: 120px 0;
+            padding: 150px 0;
             text-align: center;
         }
 
         .re-hero h1 {
-            font-size: 3.5rem;
+            font-size: 4rem;
             margin-bottom: 20px;
             color: #4CAF50;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+            font-weight: 700;
         }
 
         .re-hero p {
-            font-size: 1.2rem;
-            max-width: 700px;
+            font-size: 1.4rem;
+            max-width: 800px;
             margin: 0 auto 30px;
-        }
-
-        .re-container {
-            max-width: 1000px;
-            margin: -60px auto 60px;
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            position: relative;
-            z-index: 10;
-        }
-
-        .re-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .re-form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-family: inherit;
-        }
-
-        .btn-submit-re {
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            font-size: 1.1rem;
-            transition: transform 0.2s, background 0.2s;
-        }
-
-        .btn-submit-re:hover {
-            background-color: #45a049;
-            transform: translateY(-2px);
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
         }
 
         .section-title {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         .section-title h2 {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             color: var(--dark);
         }
 
         .section-title .accent {
             color: #4CAF50;
+        }
+
+        .land-badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .contact-banner {
+            background: #0a192f;
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            margin-top: 80px;
+            border-radius: 12px;
+        }
+
+        .contact-banner h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .contact-banner .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        .contact-banner .btn-whatsapp:hover {
+            transform: scale(1.05);
+            background-color: #128c7e;
         }
     </style>
 </head>
@@ -126,7 +109,7 @@
     <!-- Top Notification Bar -->
     <div class="top-bar">
         <div class="container">
-            <span><i class="fa-solid fa-house"></i> Gestión Inmobiliaria Rio Lebu</span>
+            <span><i class="fa-solid fa-water"></i> Oportunidades Exclusivas: Terrenos con Orilla de Lago</span>
             <div class="top-links">
                 <a href="index.html">Volver a Tienda</a>
                 <a href="contacto.html">Contacto</a>
@@ -145,9 +128,9 @@
                 </div>
             </a>
             <div class="header-actions">
-                <a href="login.html" class="action-item">
-                    <i class="fa-regular fa-user"></i>
-                    <span>Mi Cuenta</span>
+                <a href="https://wa.me/56984630759" target="_blank" class="action-item">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>Consultar</span>
                 </a>
             </div>
         </div>
@@ -156,80 +139,40 @@
     <!-- Hero -->
     <section class="re-hero">
         <div class="container">
-            <h1>Encuentra tu próximo Hogar</h1>
-            <p>Expertos en tasación, venta y arriendo de propiedades industriales, agrícolas y residenciales.
-            </p>
-            <a href="#listing-section" class="btn btn-primary" style="background-color: #4CAF50;">Ver Propiedades <i
+            <span class="land-badge">EDICIÓN LIMITADA</span>
+            <h1>Terrenos a Orilla de Lago</h1>
+            <p>Descubre el lugar perfecto para tu proyecto de vida. Parcelas exclusivas con acceso directo a lago y
+                entornos naturales privilegiados.</p>
+            <a href="#listing-section" class="btn btn-primary"
+                style="background-color: #4CAF50; border-radius: 50px; padding: 15px 40px;">Ver Disponibilidad <i
                     class="fa-solid fa-arrow-down"></i></a>
         </div>
     </section>
 
-    <!-- Form Section -->
-    <div class="container">
-        <div class="re-container">
-            <div class="section-title">
-                <h2><span class="accent">Agrega</span> tu Propiedad</h2>
-                <p>Completa el formulario y uno de nuestros expertos te contactará para gestionar la venta o arriendo.
-                </p>
-            </div>
-
-            <form id="re-submit-form">
-                <div class="re-form-grid">
-                    <div class="form-group">
-                        <label>Tipo de Propiedad</label>
-                        <select id="re-type" required>
-                            <option value="casa">Casa</option>
-                            <option value="departamento">Departamento</option>
-                            <option value="terreno">Terreno / Parcela</option>
-                            <option value="industrial">Galpón / Industrial</option>
-                            <option value="comercial">Local Comercial</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Operación</label>
-                        <select id="re-operation" required>
-                            <option value="venta">Venta</option>
-                            <option value="arriendo">Arriendo</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Ubicación (Ciudad/Sector)</label>
-                        <input type="text" id="re-location" placeholder="Ej: Lebu, Centro" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Precio Estimado (Opcional)</label>
-                        <input type="text" id="re-price" placeholder="Ej: UF 3500 o $150.000.000">
-                    </div>
-                    <div class="form-group">
-                        <label>Tu Nombre</label>
-                        <input type="text" id="re-contact-name" placeholder="Nombre completo" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Teléfono de Contacto</label>
-                        <input type="tel" id="re-contact-phone" placeholder="+56 9..." required>
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Descripción de la Propiedad</label>
-                        <textarea id="re-description" rows="4"
-                            placeholder="Cuéntanos más detalles: m2, dormitorios, baños, etc."></textarea>
-                    </div>
-                </div>
-                <button type="submit" class="btn-submit-re">Enviar Solicitud de Listado <i
-                        class="fa-solid fa-paper-plane"></i></button>
-            </form>
-        </div>
-    </div>
-
     <!-- Properties Listing -->
     <section id="listing-section" class="section-padding bg-light">
         <div class="container">
-            <div class="section-header text-center">
-                <h3>Propiedades Disponibles</h3>
-                <p>Nuestra selección exclusiva en la región</p>
+            <div class="section-title">
+                <h2>Catálogo <span class="accent">Exclusivo</span></h2>
+                <p>Propiedades seleccionadas por su ubicación y plusvalía</p>
             </div>
 
             <div class="products-grid" id="re-products-container">
                 <!-- Javascript will inject items here -->
+                <div class="loading-msg" style="grid-column: 1/-1; text-align:center;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                    <p>Buscando terrenos disponibles...</p>
+                </div>
+            </div>
+
+            <div class="contact-banner">
+                <h3>¿Buscas algo específico?</h3>
+                <p style="margin-bottom: 30px;">Si no encontraste lo que buscabas, contáctanos directamente para conocer
+                    nuevas oportunidades antes de que se publiquen.</p>
+                <a href="https://wa.me/56984630759?text=Hola!%20Me%20interesa%20obtener%20información%20sobre%20terrenos%20a%20orilla%20de%20lago."
+                    target="_blank" class="btn-whatsapp">
+                    Consultar con un Asesor <i class="fa-brands fa-whatsapp"></i>
+                </a>
             </div>
         </div>
     </section>
@@ -243,13 +186,12 @@
                         <img src="assets/images/logo.svg" alt="Rio Lebu Logo" class="logo-image">
                         <span class="logo-text">RIO LEBU</span>
                     </div>
-                    <p>Potencia, confiabilidad y ahora también su socio en inversiones inmobiliarias.</p>
+                    <p>Especialistas en maquinaria y ahora en tu futuro hogar.</p>
                 </div>
                 <div class="footer-col">
                     <h4>Contacto Inmobiliario</h4>
                     <ul>
                         <li><i class="fa-solid fa-phone"></i> +56984630759</li>
-                        <li><i class="fa-solid fa-envelope"></i> constructorariolebuspa@gmail.com</li>
                         <li><i class="fa-solid fa-location-dot"></i> Freire 520 - Lebu</li>
                     </ul>
                 </div>
@@ -264,19 +206,23 @@
     <script src="assets/js/firebase-config.js"></script>
     <script src="assets/js/script.js"></script>
     <script>
-        // Custom rendering for real estate on this page
         document.addEventListener('DOMContentLoaded', () => {
             const reContainer = document.getElementById('re-products-container');
 
-            // Listen to product changes
             db.collection('products').onSnapshot((snapshot) => {
                 const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Filter for real estate and specific "lake" keyword or just show all real estate if preferred
                 const reProducts = products.filter(p => p.category === 'bienes_raices' && p.status !== 'inactive');
 
                 if (reContainer) {
                     reContainer.innerHTML = '';
                     if (reProducts.length === 0) {
-                        reContainer.innerHTML = '<div class="no-results" style="grid-column: 1/-1; text-align:center;"><p>No hay propiedades publicadas en este momento. ¡Sé el primero en agregar la tuya!</p></div>';
+                        reContainer.innerHTML = `
+                            <div class="no-results" style="grid-column: 1/-1; text-align:center; padding: 40px; background: white; border-radius: 12px;">
+                                <i class="fa-solid fa-magnifying-glass-location fa-3x" style="color: #ccc; margin-bottom: 20px;"></i>
+                                <p>Por el momento no hay terrenos publicados. <br>Por favor, consulta por WhatsApp para conocer nuevas entradas.</p>
+                                <a href="https://wa.me/56984630759" class="btn btn-primary" style="background: #4CAF50; margin-top: 20px; border-radius: 50px;">Consultar Stock</a>
+                            </div>`;
                     } else {
                         reProducts.forEach(product => {
                             const card = document.createElement('div');
@@ -284,17 +230,18 @@
                             card.innerHTML = `
                                 <div class="product-image">
                                     <img src="${product.image}" alt="${product.name}">
+                                    <span class="discount-badge" style="background: #4CAF50;">ORILLA DE LAGO</span>
                                 </div>
                                 <div class="product-info">
-                                    <span class="product-cat" style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 4px;">Propiedad</span>
+                                    <span class="product-cat" style="background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Terreno</span>
                                     <h3 class="product-title">${product.name}</h3>
                                     <div class="product-price">
-                                        <span class="current-price" style="color: #4CAF50;">${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(product.price)}</span>
+                                        <span class="current-price" style="color: #2e7d32; font-size: 1.4rem;">${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(product.price)}</span>
                                     </div>
-                                    <p style="font-size: 0.9rem; color: #666; margin: 10px 0;">${product.observations || 'Consultar detalles por WhatsApp'}</p>
+                                    <p style="font-size: 0.95rem; color: #555; margin: 15px 0; line-height: 1.5;">${product.observations || 'Excelente ubicación y conectividad. Acceso directo a orilla de lago.'}</p>
                                     <div class="product-actions" style="margin-top: auto;">
-                                        <a href="https://wa.me/56984630759?text=Hola,%20me%20interesa%20la%20propiedad:%20${encodeURIComponent(product.name)}" target="_blank" class="btn btn-primary" style="background: #4CAF50; width: 100%; text-align: center;">
-                                            Consultar por WhatsApp <i class="fa-brands fa-whatsapp"></i>
+                                        <a href="https://wa.me/56984630759?text=Hola!%20Me%20interesa%20obtener%20más%20información%20sobre%20el%20terreno:%20${encodeURIComponent(product.name)}" target="_blank" class="btn btn-primary" style="background: #4CAF50; width: 100%; text-align: center; border-radius: 8px; padding: 12px;">
+                                            Más información <i class="fa-brands fa-whatsapp"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -304,34 +251,6 @@
                     }
                 }
             });
-
-            // Handle Form Submission
-            const reForm = document.getElementById('re-submit-form');
-            if (reForm) {
-                reForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-
-                    const name = document.getElementById('re-contact-name').value;
-                    const phone = document.getElementById('re-contact-phone').value;
-                    const type = document.getElementById('re-type').value;
-                    const operation = document.getElementById('re-operation').value;
-                    const location = document.getElementById('re-location').value;
-                    const description = document.getElementById('re-description').value;
-
-                    const message = `Hola! Quiero agregar una propiedad a Rio Lebu:\n\n` +
-                        `*Nombre:* ${name}\n` +
-                        `*Teléfono:* ${phone}\n` +
-                        `*Tipo:* ${type}\n` +
-                        `*Operación:* ${operation}\n` +
-                        `*Ubicación:* ${location}\n` +
-                        `*Detalles:* ${description}`;
-
-                    window.open(`https://wa.me/56984630759?text=${encodeURIComponent(message)}`, '_blank');
-
-                    alert('¡Gracias! Se abrirá WhatsApp para enviar tu solicitud.');
-                    reForm.reset();
-                });
-            }
         });
     </script>
 </body>
