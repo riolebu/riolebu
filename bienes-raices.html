@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terrenos a Orillas de Lago - Rio Lebu</title>
+    <title>Terrenos Exclusivos - Rio Lebu</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -109,7 +109,7 @@
     <!-- Top Notification Bar -->
     <div class="top-bar">
         <div class="container">
-            <span><i class="fa-solid fa-water"></i> Oportunidades Exclusivas: Terrenos con Orilla de Lago</span>
+            <span><i class="fa-solid fa-star"></i> Oportunidades Exclusivas: Terrenos Exclusivos</span>
             <div class="top-links">
                 <a href="index.html">Volver a Tienda</a>
                 <a href="contacto.html">Contacto</a>
@@ -140,9 +140,9 @@
     <section class="re-hero">
         <div class="container">
             <span class="land-badge">EDICIÓN LIMITADA</span>
-            <h1>Terrenos a Orilla de Lago</h1>
-            <p>Descubre el lugar perfecto para tu proyecto de vida. Parcelas exclusivas con acceso directo a lago y
-                entornos naturales privilegiados.</p>
+            <h1>Terrenos Exclusivos</h1>
+            <p>Descubre el lugar perfecto para tu proyecto de vida. Parcelas seleccionadas con entornos naturales
+                privilegiados y alta plusvalía.</p>
             <a href="#listing-section" class="btn btn-primary"
                 style="background-color: #4CAF50; border-radius: 50px; padding: 15px 40px;">Ver Disponibilidad <i
                     class="fa-solid fa-arrow-down"></i></a>
@@ -169,7 +169,7 @@
                 <h3>¿Buscas algo específico?</h3>
                 <p style="margin-bottom: 30px;">Si no encontraste lo que buscabas, contáctanos directamente para conocer
                     nuevas oportunidades antes de que se publiquen.</p>
-                <a href="https://wa.me/56984630759?text=Hola!%20Me%20interesa%20obtener%20información%20sobre%20terrenos%20a%20orilla%20de%20lago."
+                <a href="https://wa.me/56984630759?text=Hola!%20Me%20interesa%20obtener%20información%20sobre%20vuestros%20terrenos%20exclusivos."
                     target="_blank" class="btn-whatsapp">
                     Consultar con un Asesor <i class="fa-brands fa-whatsapp"></i>
                 </a>
@@ -230,7 +230,7 @@
                             card.innerHTML = `
                                 <div class="product-image">
                                     <img src="${product.image}" alt="${product.name}">
-                                    <span class="discount-badge" style="background: #4CAF50;">ORILLA DE LAGO</span>
+                                    <span class="discount-badge" style="background: #4CAF50;">EXCLUSIVO</span>
                                 </div>
                                 <div class="product-info">
                                     <span class="product-cat" style="background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Terreno</span>
@@ -238,7 +238,7 @@
                                     <div class="product-price">
                                         <span class="current-price" style="color: #2e7d32; font-size: 1.4rem;">${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(product.price)}</span>
                                     </div>
-                                    <p style="font-size: 0.95rem; color: #555; margin: 15px 0; line-height: 1.5;">${product.observations || 'Excelente ubicación y conectividad. Acceso directo a orilla de lago.'}</p>
+                                    <p style="font-size: 0.95rem; color: #555; margin: 15px 0; line-height: 1.5;">${product.observations || 'Excelente ubicación y conectividad. Oportunidad única en entorno privilegiado.'}</p>
                                     <div class="product-actions" style="margin-top: auto;">
                                         <a href="https://wa.me/56984630759?text=Hola!%20Me%20interesa%20obtener%20más%20información%20sobre%20el%20terreno:%20${encodeURIComponent(product.name)}" target="_blank" class="btn btn-primary" style="background: #4CAF50; width: 100%; text-align: center; border-radius: 8px; padding: 12px;">
                                             Más información <i class="fa-brands fa-whatsapp"></i>
