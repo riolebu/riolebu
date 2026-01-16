@@ -209,10 +209,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const reContainer = document.getElementById('re-products-container');
 
-            db.collection('products').onSnapshot((snapshot) => {
-                const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Filter for real estate and specific "lake" keyword or just show all real estate if preferred
-                const reProducts = products.filter(p => p.category === 'bienes_raices' && p.status !== 'inactive');
+            db.collection('real_estate').onSnapshot((snapshot) => {
+                const reProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 if (reContainer) {
                     reContainer.innerHTML = '';
@@ -227,21 +225,35 @@
                         reProducts.forEach(product => {
                             const card = document.createElement('div');
                             card.className = 'product-card';
+
+                            // Use the main image or a placeholder
+                            const imageUrl = product.image || 'assets/images/logo.svg';
+
                             card.innerHTML = `
                                 <div class="product-image">
-                                    <img src="${product.image}" alt="${product.name}">
-                                    <span class="discount-badge" style="background: #4CAF50;">EXCLUSIVO</span>
+                                    <img src="${imageUrl}" alt="${product.name}" style="height: 250px; object-fit: cover; width: 100%;">
+                                    <span class="discount-badge" style="background: #4CAF50;">${product.hectares ? product.hectares + ' Ha' : 'EXCLUSIVO'}</span>
                                 </div>
                                 <div class="product-info">
-                                    <span class="product-cat" style="background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Terreno</span>
-                                    <h3 class="product-title">${product.name}</h3>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <span class="product-cat" style="background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">
+                                            <i class="fa-solid fa-location-dot"></i> ${product.location || 'Lebu'}
+                                        </span>
+                                    </div>
+                                    <h3 class="product-title" style="margin-bottom: 5px;">${product.name}</h3>
+                                    
                                     <div class="product-price">
                                         <span class="current-price" style="color: #2e7d32; font-size: 1.4rem;">${new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(product.price)}</span>
                                     </div>
-                                    <p style="font-size: 0.95rem; color: #555; margin: 15px 0; line-height: 1.5;">${product.observations || 'Excelente ubicación y conectividad. Oportunidad única en entorno privilegiado.'}</p>
+                                    
+                                    <p style="font-size: 0.95rem; color: #555; margin: 15px 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                        ${product.observations || 'Excelente oportunidad de inversión.'}
+                                    </p>
+                                    
                                     <div class="product-actions" style="margin-top: auto;">
-                                        <a href="https://wa.me/56984630759?text=Hola!%20Me%20interesa%20obtener%20más%20información%20sobre%20el%20terreno:%20${encodeURIComponent(product.name)}" target="_blank" class="btn btn-primary" style="background: #4CAF50; width: 100%; text-align: center; border-radius: 8px; padding: 12px;">
-                                            Más información <i class="fa-brands fa-whatsapp"></i>
+                                        ${product.link ? `<a href="${product.link}" target="_blank" class="btn" style="background: transparent; border: 1px solid #4CAF50; color: #4CAF50; width: 100%; margin-bottom: 10px; text-align: center; border-radius: 8px; padding: 10px;">Ver Detalles <i class="fa-solid fa-external-link-alt"></i></a>` : ''}
+                                        <a href="https://wa.me/56984630759?text=Hola!%20Me%20interesa%20obtener%20más%20información%20sobre%20la%20propiedad:%20${encodeURIComponent(product.name)}" target="_blank" class="btn btn-primary" style="background: #4CAF50; width: 100%; text-align: center; border-radius: 8px; padding: 12px;">
+                                            Consultar <i class="fa-brands fa-whatsapp"></i>
                                         </a>
                                     </div>
                                 </div>

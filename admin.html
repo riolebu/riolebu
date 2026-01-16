@@ -35,6 +35,9 @@
                     <li data-section="inventario"><a href="#" class="nav-item" data-tab="inventory"><i
                                 class="fa-solid fa-boxes-stacked"></i>
                             Inventario</a></li>
+                    <li data-section="bienes_raices"><a href="#" class="nav-item" data-tab="real-estate"><i
+                                class="fa-solid fa-map-location-dot"></i>
+                            Bienes Raíces</a></li>
                     <li><a href="#" class="nav-item" data-tab="movements"><i class="fa-solid fa-list-check"></i>
                             Movimientos</a></li>
                     <li data-section="usuarios"><a href="#" class="nav-item" data-tab="users"><i
@@ -175,6 +178,35 @@
                             </tr>
                         </thead>
                         <tbody id="inventory-body">
+                            <!-- Rows via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Real Estate Section -->
+            <section id="real-estate" class="tab-content">
+                <div class="inventory-header">
+                    <h1>Gestión de Bienes Raíces</h1>
+                    <div class="inv-controls">
+                        <input type="text" id="prop-search" placeholder="Buscar propiedad...">
+                        <button class="btn-add" id="btn-add-property"><i class="fa-solid fa-plus"></i> Nueva
+                            Propiedad</button>
+                    </div>
+                </div>
+
+                <div class="inventory-table-wrapper">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Ubicación</th>
+                                <th>Hectáreas</th>
+                                <th>Precio</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="real-estate-body">
                             <!-- Rows via JS -->
                         </tbody>
                     </table>
@@ -359,7 +391,7 @@
                     </div>
                     <div class="form-group">
                         <label>Precio (CLP)</label>
-                        <input type="number" id="new-prod-price" min="0" required>
+                        <input type="text" id="new-prod-price" inputmode="numeric" required>
                     </div>
                 </div>
                 <div class="form-row">
@@ -393,6 +425,106 @@
         </div>
     </div>
 
+
+
+    <!-- Add Property Modal -->
+    <div id="add-property-modal" class="modal-overlay">
+        <div class="modal-box" style="max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Agregar Nueva Propiedad</h3>
+                <button class="close-modal" id="close-add-property-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="add-property-form">
+                <div class="form-group">
+                    <label>Nombre del Terreno</label>
+                    <input type="text" id="new-prop-name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ubicación</label>
+                        <input type="text" id="new-prop-location" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio (CLP)</label>
+                        <input type="text" id="new-prop-price" inputmode="numeric" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hectáreas</label>
+                        <input type="text" id="new-prop-hectares" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Link con Datos (URL)</label>
+                    <input type="url" id="new-prop-link" placeholder="https://ejemplo.com/datos">
+                </div>
+
+                <div class="form-group">
+                    <label>Fotos del Terreno</label>
+                    <input type="file" id="new-prop-image-file" accept="image/*" class="file-input" multiple>
+                    <div id="prop-image-preview-container"
+                        style="margin-top: 10px; display: none; display: flex; flex-wrap: wrap; gap: 10px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="new-prop-obs" rows="4" placeholder="Detalles del terreno..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary-modal">Guardar Propiedad</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Property Modal -->
+    <div id="edit-property-modal" class="modal-overlay">
+        <div class="modal-box" style="max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Editar Propiedad</h3>
+                <button class="close-modal" id="close-edit-property-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="edit-property-form">
+                <input type="hidden" id="edit-prop-docid">
+                <div class="form-group">
+                    <label>Nombre del Terreno</label>
+                    <input type="text" id="edit-prop-name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ubicación</label>
+                        <input type="text" id="edit-prop-location" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio (CLP)</label>
+                        <input type="text" id="edit-prop-price" inputmode="numeric" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hectáreas</label>
+                        <input type="text" id="edit-prop-hectares" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Link con Datos (URL)</label>
+                    <input type="url" id="edit-prop-link" placeholder="https://ejemplo.com/datos">
+                </div>
+
+                <div class="form-group">
+                    <label>Fotos del Terreno</label>
+                    <input type="file" id="edit-prop-image-file" accept="image/*" class="file-input" multiple>
+                    <div id="edit-prop-image-preview-container"
+                        style="margin-top: 10px; display: none; display: flex; flex-wrap: wrap; gap: 10px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="edit-prop-obs" rows="4" placeholder="Detalles del terreno..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary-modal">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
 
     <div id="dte-modal" class="modal-overlay">
         <div class="modal-box dte-box">
@@ -619,7 +751,7 @@
                     </div>
                     <div class="form-group">
                         <label>Precio (CLP)</label>
-                        <input type="number" id="edit-prod-price" min="0" required>
+                        <input type="text" id="edit-prod-price" inputmode="numeric" required>
                         <small id="edit-price-restriction" style="display: none; color: #666; margin-top: 5px;">
                             <i class="fa-solid fa-lock"></i> Solo administradores pueden editar el precio
                         </small>

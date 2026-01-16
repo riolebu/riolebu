@@ -12,6 +12,42 @@ const ADMIN_PASS = "admin123";
 function logDebug(msg) {
     console.log(`[DEBUG] ${msg}`);
 }
+
+// Currency Formatting Helpers
+const formatCurrencyInput = (input) => {
+    // Remove non-numeric characters
+    let value = input.value.replace(/\D/g, '');
+
+    // Format with dots
+    if (value) {
+        value = new Intl.NumberFormat('es-CL').format(parseInt(value));
+    }
+
+    input.value = value;
+};
+
+const cleanCurrencyInput = (value) => {
+    if (!value) return 0;
+    return parseInt(value.toString().replace(/\./g, '')) || 0;
+};
+
+// Auto-attach formatters to known price inputs
+document.addEventListener('DOMContentLoaded', () => {
+    const priceInputs = [
+        'new-prod-price',
+        'edit-prod-price',
+        'new-prop-price',
+        'edit-prop-price'
+    ];
+
+    priceInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', (e) => formatCurrencyInput(e.target));
+        }
+    });
+});
+
 logDebug("Iniciando Firebase...");
 
 const defaultProducts = [
@@ -54,6 +90,17 @@ productsRef.onSnapshot((snapshot) => {
 
     // Update autocomplete list for movements filter
     if (typeof updateProductSuggestions === 'function') updateProductSuggestions();
+});
+
+// Real Estate Listener
+let properties = [];
+const propertiesRef = db.collection('real_estate');
+propertiesRef.onSnapshot((snapshot) => {
+    properties = snapshot.docs.map(doc => ({
+        docId: doc.id,
+        ...doc.data()
+    }));
+    if (itemActiveTab === 'real-estate') renderRealEstate();
 });
 
 const movementsRef = db.collection('movements');
@@ -318,6 +365,7 @@ navItems.forEach(item => {
 
         // Logic
         if (tabId === 'inventory') renderInventory();
+        if (tabId === 'real-estate') renderRealEstate();
         if (tabId === 'movements') renderMovementsHistory();
         if (tabId === 'users') renderUsers();
         if (tabId === 'pos') {
@@ -805,6 +853,300 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+/* --- Real Estate Module --- */
+const renderRealEstate = () => {
+    const tbody = document.getElementById('real-estate-body');
+    const searchTerm = document.getElementById('prop-search') ? document.getElementById('prop-search').value.toLowerCase() : '';
+
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    let filtered = properties;
+
+    if (searchTerm) {
+        filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm) || p.location.toLowerCase().includes(searchTerm));
+    }
+
+    filtered.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${p.name}</td>
+            <td>${p.location}</td>
+            <td>${p.hectares}</td>
+            <td>${formatPrice(p.price)}</td>
+            <td>
+                <button class="btn-action btn-edit" onclick="editProperty('${p.docId}')" title="Editar" style="background-color: #f37021; color: white; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-action btn-delete" onclick="deleteProperty('${p.docId}', '${p.name}')" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+};
+
+const searchPropInput = document.getElementById('prop-search');
+if (searchPropInput) {
+    searchPropInput.addEventListener('input', renderRealEstate);
+}
+
+window.deleteProperty = async (docId, name) => {
+    if (!confirm(`¿Estás seguro de eliminar la propiedad "${name}"?`)) return;
+    try {
+        await db.collection('real_estate').doc(docId).delete();
+        // UI updates via snapshot
+    } catch (e) {
+        alert("Error al eliminar: " + e.message);
+    }
+};
+
+// Add Property Modal Logic
+const btnAddProperty = document.getElementById('btn-add-property');
+const addPropertyModal = document.getElementById('add-property-modal');
+const closeAddPropertyModal = document.getElementById('close-add-property-modal');
+const addPropertyForm = document.getElementById('add-property-form');
+const propImagePreviewContainer = document.getElementById('prop-image-preview-container');
+
+// Reusing global uploadedImagesList, so we must be careful to reset it.
+
+if (btnAddProperty) {
+    btnAddProperty.addEventListener('click', () => {
+        uploadedImagesList = []; // Reset global image buffer
+        renderPropertyImagePreviews('prop-image-preview-container');
+        addPropertyModal.classList.add('open');
+    });
+}
+
+if (closeAddPropertyModal) {
+    closeAddPropertyModal.addEventListener('click', () => {
+        addPropertyForm.reset();
+        uploadedImagesList = [];
+        renderPropertyImagePreviews('prop-image-preview-container');
+        addPropertyModal.classList.remove('open');
+    });
+}
+
+const renderPropertyImagePreviews = (containerId) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (uploadedImagesList.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+
+    uploadedImagesList.forEach((base64, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
+
+        const img = document.createElement('img');
+        img.src = base64;
+        img.style.width = '100px';
+        img.style.height = '100px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '4px';
+        img.style.border = '1px solid #ccc';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        deleteBtn.style.position = 'absolute';
+        deleteBtn.style.top = '-5px';
+        deleteBtn.style.right = '-5px';
+        deleteBtn.style.background = 'red';
+        deleteBtn.style.color = 'white';
+        deleteBtn.style.border = 'none';
+        deleteBtn.style.borderRadius = '50%';
+        deleteBtn.style.width = '20px';
+        deleteBtn.style.height = '20px';
+        deleteBtn.style.cursor = 'pointer';
+        deleteBtn.style.display = 'flex';
+        deleteBtn.style.alignItems = 'center';
+        deleteBtn.style.justifyContent = 'center';
+        deleteBtn.style.fontSize = '12px';
+        deleteBtn.type = 'button';
+
+        deleteBtn.onclick = () => {
+            uploadedImagesList.splice(index, 1);
+            renderPropertyImagePreviews(containerId);
+        };
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(deleteBtn);
+        container.appendChild(wrapper);
+    });
+};
+
+const propFileInput = document.getElementById('new-prop-image-file');
+if (propFileInput) {
+    propFileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            let processedCount = 0;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadedImagesList.push(event.target.result);
+                    processedCount++;
+                    if (processedCount === files.length) {
+                        renderPropertyImagePreviews('prop-image-preview-container');
+                        propFileInput.value = '';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    });
+}
+
+if (addPropertyForm) {
+    addPropertyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "Guardando...";
+
+        const name = document.getElementById('new-prop-name').value;
+        const location = document.getElementById('new-prop-location').value;
+        const price = cleanCurrencyInput(document.getElementById('new-prop-price').value);
+        const hectares = document.getElementById('new-prop-hectares').value;
+        const link = document.getElementById('new-prop-link').value.trim();
+        const obs = document.getElementById('new-prop-obs').value.trim();
+
+        let finalImages = [...uploadedImagesList]; // Copy current list
+
+        if (finalImages.length === 0) {
+            // Optional: Default image if none provided
+        }
+
+        const newProperty = {
+            id: Date.now(), // timestamp as ID
+            name: name,
+            location: location,
+            price: price,
+            hectares: hectares,
+            link: link,
+            observations: obs,
+            images: finalImages,
+            image: finalImages.length > 0 ? finalImages[0] : '', // Main image
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            await db.collection('real_estate').add(newProperty);
+            alert(`Propiedad "${name}" agregada correctamente!`);
+            addPropertyForm.reset();
+            uploadedImagesList = [];
+            renderPropertyImagePreviews('prop-image-preview-container');
+            addPropertyModal.classList.remove('open');
+        } catch (err) {
+            alert("Error al guardar propiedad: " + err.message);
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Guardar Propiedad";
+        }
+    });
+}
+
+// --- Edit Property Logic ---
+window.editProperty = async (docId) => {
+    const property = properties.find(p => p.docId === docId);
+    if (!property) return;
+
+    // Populate fields
+    document.getElementById('edit-prop-docid').value = docId;
+    document.getElementById('edit-prop-name').value = property.name;
+    document.getElementById('edit-prop-location').value = property.location;
+    document.getElementById('edit-prop-price').value = new Intl.NumberFormat('es-CL').format(property.price);
+    document.getElementById('edit-prop-hectares').value = property.hectares;
+    document.getElementById('edit-prop-link').value = property.link || '';
+    document.getElementById('edit-prop-obs').value = property.observations || '';
+
+    // Handle images
+    uploadedImagesList = property.images ? [...property.images] : [];
+    renderPropertyImagePreviews('edit-prop-image-preview-container');
+
+    // Show modal
+    document.getElementById('edit-property-modal').classList.add('open');
+};
+
+const closeEditPropertyModal = document.getElementById('close-edit-property-modal');
+const editPropertyForm = document.getElementById('edit-property-form');
+const editPropFileInput = document.getElementById('edit-prop-image-file');
+
+if (closeEditPropertyModal) {
+    closeEditPropertyModal.addEventListener('click', () => {
+        document.getElementById('edit-property-modal').classList.remove('open');
+        uploadedImagesList = [];
+    });
+}
+
+if (editPropFileInput) {
+    editPropFileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            let processedCount = 0;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadedImagesList.push(event.target.result);
+                    processedCount++;
+                    if (processedCount === files.length) {
+                        renderPropertyImagePreviews('edit-prop-image-preview-container');
+                        editPropFileInput.value = '';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    });
+}
+
+if (editPropertyForm) {
+    editPropertyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "Guardando...";
+
+        const docId = document.getElementById('edit-prop-docid').value;
+        const name = document.getElementById('edit-prop-name').value;
+        const location = document.getElementById('edit-prop-location').value;
+        const price = cleanCurrencyInput(document.getElementById('edit-prop-price').value);
+        const hectares = document.getElementById('edit-prop-hectares').value;
+        const link = document.getElementById('edit-prop-link').value.trim();
+        const obs = document.getElementById('edit-prop-obs').value.trim();
+
+        let finalImages = [...uploadedImagesList];
+
+        const updateData = {
+            name: name,
+            location: location,
+            price: price,
+            hectares: hectares,
+            link: link,
+            observations: obs,
+            images: finalImages,
+            image: finalImages.length > 0 ? finalImages[0] : ''
+        };
+
+        try {
+            await db.collection('real_estate').doc(docId).update(updateData);
+            alert('Propiedad actualizada correctamente');
+            document.getElementById('edit-property-modal').classList.remove('open');
+        } catch (err) {
+            alert("Error al actualizar propiedad: " + err.message);
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Guardar Cambios";
+        }
+    });
+}
+
+
 /* --- DTE & Document Module (SII Chile) --- */
 let currentDocType = 'boleta';
 
@@ -1123,7 +1465,7 @@ window.editProduct = async (id) => {
     document.getElementById('edit-prod-id').value = product.id;
     document.getElementById('edit-prod-name').value = product.name;
     document.getElementById('edit-prod-category').value = product.category;
-    document.getElementById('edit-prod-price').value = product.price;
+    document.getElementById('edit-prod-price').value = new Intl.NumberFormat('es-CL').format(product.price);
     document.getElementById('edit-prod-stock').value = product.stock;
     document.getElementById('edit-prod-doc').value = product.document || '';
     document.getElementById('edit-prod-obs').value = product.observations || '';
@@ -1253,7 +1595,7 @@ if (editProductForm) {
 
         const newName = document.getElementById('edit-prod-name').value.trim();
         const newCategory = document.getElementById('edit-prod-category').value;
-        const newPrice = parseInt(document.getElementById('edit-prod-price').value);
+        const newPrice = cleanCurrencyInput(document.getElementById('edit-prod-price').value);
         const newStock = parseInt(document.getElementById('edit-prod-stock').value);
         const newDoc = document.getElementById('edit-prod-doc').value.trim();
         const newObs = document.getElementById('edit-prod-obs').value.trim();
@@ -1386,7 +1728,7 @@ if (addProductForm) {
 
         const name = document.getElementById('new-prod-name').value;
         const category = document.getElementById('new-prod-category').value;
-        const price = parseInt(document.getElementById('new-prod-price').value);
+        const price = cleanCurrencyInput(document.getElementById('new-prod-price').value);
         const stock = parseInt(document.getElementById('new-prod-stock').value);
         const observations = document.getElementById('new-prod-obs').value.trim();
 
