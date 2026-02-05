@@ -171,7 +171,7 @@ usersRef.onSnapshot(async (snapshot) => {
         const masterAdmin = {
             name: 'Administrador Master',
             email: masterEmail,
-            password: 'admin',
+            password: 'admin123',
             role: 'admin',
             status: 'active',
             createdAt: new Date().toISOString()
@@ -281,7 +281,7 @@ window.forceResetAdmin = async () => {
     const masterAdmin = {
         name: 'Administrador Master',
         email: 'admin@mariomari.cl',
-        password: 'admin',
+        password: 'admin123',
         role: 'admin',
         status: 'active',
         createdAt: new Date().toISOString()
@@ -294,7 +294,7 @@ window.forceResetAdmin = async () => {
         } else {
             await db.collection('users').add(masterAdmin);
         }
-        alert("Administrador Maestro restaurado.\nCorreo: admin@mariomari.cl\nContraseña: admin");
+        alert("Administrador Maestro restaurado.\nCorreo: admin@mariomari.cl\nContraseña: admin123");
         window.location.reload();
     } catch (e) {
         alert("Error al restaurar: " + e.message);
